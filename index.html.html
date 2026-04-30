@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FormFlow — Dashboard de Formações</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070F;--bg2:#0D0D1A;--bg3:#121220;--bg4:#181828;--bg5:#1E1E32;
+  --border:#1E1E32;--border2:#282840;--border3:#343456;
+  --text:#F2F0FF;--text2:#8A88AA;--text3:#4A4870;--text4:#2A2848;
+  --accent:#7B6FFF;--teal:#00E5A0;--red:#FF5252;--amber:#FFB020;--blue:#4FC3F7;--pink:#FF6B9D;
+  --gr1:linear-gradient(135deg,#7B6FFF,#00E5A0);
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:8px;--r2:12px;--r3:16px;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ══ AUTH ══ */
+#screen-auth{align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,111,255,.15) 0%,transparent 60%),var(--bg)}
+.auth-wrap{width:100%;max-width:400px;padding:1.5rem}
+.brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:2.5rem}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:var(--gr1);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;box-shadow:0 0 32px rgba(123,111,255,.4)}
+.brand-name{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.brand-name span{background:var(--gr1);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:2rem}
+.atabs{display:flex;background:var(--bg4);border-radius:var(--r);padding:3px;margin-bottom:1.5rem}
+.atab{flex:1;padding:7px;font-size:13px;font-weight:500;border:none;border-radius:6px;background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font);transition:.2s}
+.atab.on{background:var(--accent);color:#fff}
+.auth-h{font-size:17px;font-weight:600;margin-bottom:4px}
+.auth-sub{font-size:12px;color:var(--text2);margin-bottom:1.5rem}
+.err{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.3);color:var(--red);font-size:12px;padding:8px 12px;border-radius:var(--r);margin-bottom:12px;display:none}
+.field{margin-bottom:14px}
+.field label{font-size:11px;font-weight:500;color:var(--text3);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg4);color:var(--text);font-family:var(--font);transition:.2s;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(123,111,255,.12)}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3)}
+.big-btn{width:100%;padding:11px;font-size:14px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;font-family:var(--font);margin-top:4px;transition:.2s;letter-spacing:-.01em}
+.big-btn.primary{background:var(--accent);color:#fff}
+.big-btn.primary:hover{opacity:.88}
+
+/* ══ ONBOARD ══ */
+#screen-onboard{align-items:center;justify-content:center;background:radial-gradient(ellipse 60% 40% at 30% 100%,rgba(0,229,160,.08) 0%,transparent 60%),var(--bg);flex-direction:column}
+.ob-wrap{width:100%;max-width:500px;padding:1.5rem;text-align:center}
+.ob-step{display:none}
+.ob-step.on{display:block}
+.ob-icon{font-size:40px;margin-bottom:1rem}
+.ob-h{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.ob-sub{font-size:13px;color:var(--text2);margin-bottom:2rem;line-height:1.6}
+.ob-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:1.75rem;text-align:left}
+.ob-btn{padding:10px 28px;font-size:13px;font-weight:600;border:none;border-radius:var(--r);background:var(--accent);color:#fff;cursor:pointer;font-family:var(--font);transition:.2s;margin-top:1rem}
+.ob-btn:hover{opacity:.88}
+.ob-dots{display:flex;justify-content:center;gap:6px;margin-top:1.5rem}
+.od{width:6px;height:6px;border-radius:3px;background:var(--border2);transition:.3s}
+.od.on{background:var(--accent);width:20px}
+.ob-course-row{display:grid;grid-template-columns:1fr 90px 78px 28px;gap:6px;margin-bottom:6px;align-items:center}
+.ob-course-row input,.ob-course-row select{padding:7px 10px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg4);color:var(--text);font-family:var(--font);outline:none;width:100%}
+.ob-rm{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ══ APP ══ */
+#screen-app{flex-direction:column}
+.app-inner{max-width:1160px;margin:0 auto;padding:1.25rem 1rem;width:100%}
+
+/* NAV */
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
+.nav-brand{display:flex;align-items:center;gap:8px}
+.nav-logo{width:30px;height:30px;border-radius:8px;background:var(--gr1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.nav-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.nav-country{font-size:11px;color:var(--text3);margin-top:1px}
+.nav-tabs{display:flex;gap:2px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:3px}
+.nt{padding:6px 13px;font-size:12px;font-weight:500;border:none;border-radius:9px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:.15s;white-space:nowrap}
+.nt.on{background:var(--bg5);color:var(--text)}
+.nt.ia-tab.on{background:var(--accent);color:#fff}
+.nav-right{display:flex;gap:6px;align-items:center}
+.btn{padding:6px 12px;font-size:12px;font-weight:500;border-radius:var(--r);cursor:pointer;font-family:var(--font);transition:.15s;white-space:nowrap;border:none}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-acc{background:var(--accent);color:#fff}
+.btn-acc:hover{opacity:.85}
+.btn-teal{background:var(--teal);color:#07070F;font-weight:600}
+.btn-teal:hover{opacity:.85}
+.btn-red{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.25);color:var(--red)}
+.btn-red:hover{background:rgba(255,82,82,.2)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.user-chip{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:12px;color:var(--text2)}
+.user-chip:hover{background:var(--bg4)}
+.udot{width:20px;height:20px;border-radius:50%;background:var(--gr1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;flex-shrink:0}
+
+/* STATUS BAR */
+.sbar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;font-size:11px;color:var(--text3)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;box-shadow:0 0 6px rgba(0,229,160,.5)}
+.sdot.warn{background:var(--amber);box-shadow:0 0 6px rgba(255,176,32,.5)}
+
+/* ALERTS */
+.alerts{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.al{display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r);border:1px solid;font-size:12px;flex:1;min-width:220px}
+.al-up{background:rgba(0,229,160,.06);border-color:rgba(0,229,160,.2);color:var(--teal)}
+.al-dn{background:rgba(255,82,82,.06);border-color:rgba(255,82,82,.2);color:var(--red)}
+.al-warn{background:rgba(255,176,32,.06);border-color:rgba(255,176,32,.2);color:var(--amber)}
+.al-ic{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+
+/* CONTROLS */
+.ctrls{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.period-btns{display:flex;gap:3px}
+.pb{padding:5px 11px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font);transition:.15s}
+.pb.on{background:var(--bg4);border-color:var(--border3);color:var(--text)}
+.train-pills{display:flex;gap:5px;flex-wrap:wrap}
+.tp{padding:5px 12px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);transition:.15s;display:flex;align-items:center;gap:5px}
+.tp:hover{border-color:var(--border3);color:var(--text)}
+.tp .tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:8px;margin-bottom:1.25rem}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px 15px;position:relative;overflow:hidden}
+.metric::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:1px 1px 0 0}
+.m-v::after{background:var(--accent)}.m-t::after{background:var(--teal)}.m-a::after{background:var(--amber)}.m-r::after{background:var(--red)}.m-b::after{background:var(--blue)}
+.metric .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.metric .val{font-size:20px;font-weight:600;color:var(--text);line-height:1;font-family:var(--mono)}
+.metric .sub{font-size:10px;color:var(--text3);margin-top:5px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:10px}
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem}
+.card-h{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:14px}
+.chart-box{position:relative;width:100%;height:195px}
+
+/* AIDA */
+.aida{display:flex;flex-direction:column;gap:8px}
+.ar{display:flex;align-items:center;gap:8px}
+.ar-lbl{width:64px;font-size:10px;font-weight:600;color:var(--text3);flex-shrink:0;text-transform:uppercase;letter-spacing:.05em}
+.ar-bwrap{flex:1}
+.ar-bar{height:32px;border-radius:8px;display:flex;align-items:center;padding:0 12px;transition:width .5s cubic-bezier(.4,0,.2,1);min-width:40px}
+.ar-bar span{font-size:11px;font-weight:500;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ar-pct{font-size:10px;color:var(--text3);width:32px;text-align:right;flex-shrink:0;font-family:var(--mono)}
+
+/* ROWS */
+.ri{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.ri:last-child{border-bottom:none}
+.ri .rn{color:var(--text2)}
+.ri .rv{font-weight:500;font-family:var(--mono);color:var(--text)}
+.total-ln{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px;border-top:1px solid var(--border2);font-size:13px;font-weight:600}
+.tv{font-family:var(--mono);color:var(--teal)}
+
+/* REMARKET */
+.rm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.rmb{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center}
+.rmb .rt{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.rmb .rv{font-size:18px;font-weight:600;font-family:var(--mono)}
+.rmb.urg .rv{color:var(--red)}.rmb.hot .rv{color:var(--amber)}.rmb.warm .rv{color:var(--accent)}.rmb.cold .rv{color:var(--text2)}
+
+/* FORMS */
+.sec-h{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
+.sec-sub{font-size:12px;color:var(--text3);margin-bottom:1rem;line-height:1.6}
+.fg{margin-bottom:0}
+.fg label{font-size:10px;font-weight:500;color:var(--text3);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.fg input,.fg select,.fg textarea{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg4);color:var(--text);font-family:var(--font);outline:none;transition:.2s}
+.fg input:focus,.fg select:focus{border-color:var(--accent)}
+.fg input::placeholder{color:var(--text3)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+
+/* CSV ZONE */
+.csv-zone{border:2px dashed var(--border2);border-radius:var(--r2);padding:2rem;text-align:center;cursor:pointer;transition:.2s;margin-bottom:1rem}
+.csv-zone:hover,.csv-zone.drag{border-color:var(--accent);background:rgba(123,111,255,.04)}
+.csv-prev{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;font-family:var(--mono);font-size:11px;color:var(--text2);max-height:160px;overflow-y:auto;display:none;margin-bottom:1rem}
+
+/* COURSES */
+.c-list{display:flex;flex-direction:column;gap:7px;margin-bottom:1rem}
+.ci{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);transition:.2s}
+.ci:hover{border-color:var(--border3)}
+.ci-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.ci-name{flex:1;font-size:13px;font-weight:500}
+.ci-ticket{font-size:11px;font-family:var(--mono);color:var(--text2)}
+.ci-fmt{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--bg5);color:var(--text3)}
+.ci-acts{display:flex;gap:4px;opacity:0;transition:.15s}
+.ci:hover .ci-acts{opacity:1}
+
+/* COLOR PICKER */
+.cp{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.cs{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:.15s;flex-shrink:0}
+.cs.on{border-color:#fff;transform:scale(1.1)}
+
+/* ══ AI TAB ══ */
+.ia-layout{display:grid;grid-template-columns:1fr 300px;gap:12px;align-items:start}
+@media(max-width:768px){.ia-layout{grid-template-columns:1fr}}
+.ia-chat{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem;display:flex;flex-direction:column;height:620px}
+.ia-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.ia-avatar{width:34px;height:34px;border-radius:50%;background:var(--gr1);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ia-name{font-size:14px;font-weight:600}
+.ia-status{font-size:11px;color:var(--teal);display:flex;align-items:center;gap:4px}
+.ia-status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal);display:inline-block}
+.ia-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px;margin-bottom:12px;scroll-behavior:smooth}
+.ia-msgs::-webkit-scrollbar{width:3px}
+.ia-msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:88%}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.ai{align-self:flex-start;align-items:flex-start}
+.msg-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.msg.user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.msg.ai .msg-bubble{background:var(--bg4);color:var(--text);border-bottom-left-radius:3px;border:1px solid var(--border2)}
+.msg-time{font-size:10px;color:var(--text3)}
+.ia-input-row{display:flex;gap:8px;align-items:flex-end}
+.ia-input-row textarea{flex:1;padding:9px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg4);color:var(--text);font-family:var(--font);resize:none;outline:none;line-height:1.5;transition:.2s}
+.ia-input-row textarea:focus{border-color:var(--accent)}
+.ia-input-row textarea::placeholder{color:var(--text3)}
+.ia-send{padding:9px 16px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);transition:.2s;white-space:nowrap;align-self:flex-end}
+.ia-send:hover{opacity:.85}
+.ia-send:disabled{opacity:.45;cursor:default}
+.ia-sidebar{display:flex;flex-direction:column;gap:8px}
+.ia-qs-h{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px}
+.ia-q{width:100%;padding:9px 12px;font-size:12px;font-weight:400;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:var(--font);transition:.15s;text-align:left;line-height:1.4}
+.ia-q:hover{background:var(--bg4);border-color:var(--border3);color:var(--text)}
+.ia-info{padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--text3);line-height:1.6;margin-top:4px}
+.typing{display:flex;gap:4px;align-items:center;padding:10px 14px;background:var(--bg4);border:1px solid var(--border2);border-radius:12px;border-bottom-left-radius:3px;width:fit-content}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.ia-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--text3);text-align:center}
+.ia-empty .ie-icon{font-size:32px;margin-bottom:4px}
+.ia-empty p{font-size:13px;line-height:1.6;max-width:260px}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+.overlay.on{display:flex}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r3);padding:2rem;width:100%;max-width:460px;position:relative}
+.modal-x{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-x:hover{background:var(--bg5);color:var(--text)}
+.modal-h{font-size:16px;font-weight:600;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--text3);margin-bottom:1.5rem}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border2);color:var(--text);padding:10px 16px;border-radius:var(--r);font-size:13px;z-index:9999;transition:.3s;opacity:0;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+#toast.on{opacity:1}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .nav{flex-direction:column;align-items:flex-start}
+  .nav-tabs{overflow-x:auto;width:100%}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .rm-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ SCREEN: AUTH -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-wrap">
+    <div class="brand">
+      <div class="brand-mark">F</div>
+      <div class="brand-name">Form<span>Flow</span></div>
+    </div>
+    <div class="auth-card">
+      <div class="atabs">
+        <button class="atab on" onclick="authTab('login',this)">Entrar</button>
+        <button class="atab" onclick="authTab('register',this)">Criar conta</button>
+      </div>
+      <div id="pane-login">
+        <div class="auth-h">Bem-vindo de volta</div>
+        <div class="auth-sub">Acede ao teu painel de formações</div>
+        <div class="err" id="err-login"></div>
+        <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="email@exemplo.com" autocomplete="email"></div>
+        <div class="field"><label>Senha</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <button class="big-btn primary" onclick="doLogin()">Entrar no painel</button>
+      </div>
+      <div id="pane-register" style="display:none">
+        <div class="auth-h">Criar conta gratuita</div>
+        <div class="auth-sub">Começa a medir o crescimento das tuas formações</div>
+        <div class="err" id="err-reg"></div>
+        <div class="field"><label>Nome</label><input type="text" id="r-name" placeholder="O teu nome"></div>
+        <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="email@exemplo.com" autocomplete="email"></div>
+        <div class="field"><label>Senha (mín. 6 caracteres)</label><input type="password" id="r-pass" placeholder="••••••••" autocomplete="new-password"></div>
+        <div class="field"><label>Confirmar senha</label><input type="password" id="r-pass2" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <button class="big-btn primary" onclick="doRegister()">Criar conta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ SCREEN: ONBOARD -->
+<div class="screen" id="screen-onboard">
+  <div class="ob-wrap">
+    <div class="ob-step on" id="obs-1">
+      <div class="ob-icon">🏛️</div>
+      <div class="ob-h">Como se chama a tua instituição?</div>
+      <div class="ob-sub">Este nome aparecerá no teu painel e nos relatórios.</div>
+      <div class="ob-card">
+        <div class="field"><label>Nome da instituição</label><input type="text" id="ob-inst" placeholder="ex: Academia Versa Angola" autofocus></div>
+        <div class="field"><label>País</label>
+          <select id="ob-country">
+            <option>Angola</option><option>Moçambique</option><option>Portugal</option><option>Brasil</option><option>Cabo Verde</option><option>Outro</option>
+          </select>
+        </div>
+        <button class="ob-btn" onclick="obNext(1)">Continuar →</button>
+      </div>
+      <div class="ob-dots"><div class="od on"></div><div class="od"></div><div class="od"></div></div>
+    </div>
+
+    <div class="ob-step" id="obs-2">
+      <div class="ob-icon">📚</div>
+      <div class="ob-h">Quais são os teus treinamentos?</div>
+      <div class="ob-sub">Podes editar ou adicionar mais depois. Começa com pelo menos um.</div>
+      <div class="ob-card">
+        <div style="display:grid;grid-template-columns:1fr 90px 78px 28px;gap:6px;margin-bottom:6px">
+          <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Nome</span>
+          <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Ticket Kz</span>
+          <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Formato</span>
+          <span></span>
+        </div>
+        <div id="ob-courses"></div>
+        <button class="btn btn-ghost" style="width:100%;font-size:12px;padding:8px;margin-top:4px" onclick="addObCourse()">+ Adicionar treinamento</button>
+        <button class="ob-btn" onclick="obNext(2)" style="width:100%;margin-top:10px">Continuar →</button>
+      </div>
+      <div class="ob-dots"><div class="od"></div><div class="od on"></div><div class="od"></div></div>
+    </div>
+
+    <div class="ob-step" id="obs-3">
+      <div class="ob-icon">🚀</div>
+      <div class="ob-h">Tudo configurado!</div>
+      <div class="ob-sub">O teu painel está pronto. Podes começar a inserir dados da primeira semana.</div>
+      <div class="ob-card" style="text-align:left">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--teal)">✓</span> Conta criada</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--teal)">✓</span> Instituição configurada</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)" id="ob-done-courses"><span style="color:var(--teal)">✓</span> Treinamentos adicionados</div>
+        </div>
+        <button class="ob-btn" onclick="finishOnboard()" style="width:100%;margin-top:1.5rem">Abrir o meu painel →</button>
+      </div>
+      <div class="ob-dots"><div class="od"></div><div class="od"></div><div class="od on"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ SCREEN: APP -->
+<div class="screen" id="screen-app">
+<div class="app-inner">
+
+  <div class="nav">
+    <div class="nav-brand">
+      <div class="nav-logo" id="nav-logo">SF</div>
+      <div>
+        <div class="nav-name" id="nav-name">FormFlow</div>
+        <div class="nav-country" id="nav-country">Angola</div>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nt on" onclick="goTab('dashboard',this)">Dashboard</button>
+      <button class="nt" onclick="goTab('dados',this)">Inserir dados</button>
+      <button class="nt" onclick="goTab('cursos',this)">Cursos</button>
+      <button class="nt ia-tab" onclick="goTab('ia',this)">✦ Assistente IA</button>
+      <button class="nt" onclick="goTab('config',this)">Configurar</button>
+    </div>
+    <div class="nav-right">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Exportar CSV</button>
+      <button class="btn btn-teal btn-sm" onclick="quickReport()">Relatório ↗</button>
+      <div class="user-chip" onclick="confirmLogout()">
+        <div class="udot" id="u-dot">U</div>
+        <span id="u-name">Utilizador</span>
+        <span style="font-size:9px;color:var(--text3)">▾</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sbar">
+    <div class="sdot" id="sdot"></div>
+    <span id="sbar-msg">Verificando armazenamento...</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--accent);cursor:pointer" onclick="exportCSV()">Exportar backup</span>
+  </div>
+
+  <!-- ── TAB: DASHBOARD ── -->
+  <div id="tab-dashboard">
+    <div class="ctrls">
+      <div class="period-btns">
+        <button class="pb on" onclick="setPeriod('semana',this)">Semana</button>
+        <button class="pb" onclick="setPeriod('mes',this)">Mês</button>
+        <button class="pb" onclick="setPeriod('total',this)">Total</button>
+      </div>
+      <div class="train-pills" id="train-pills"></div>
+    </div>
+    <div class="alerts" id="alert-bar"></div>
+    <div class="metrics" id="metrics-grid"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-h">Funil AIDA — <span id="funil-lbl">todos</span></div>
+        <div class="aida" id="aida"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px">
+          <span style="color:var(--text3)">Conversão Atenção → Acção</span>
+          <span style="font-weight:600;font-family:var(--mono);color:var(--teal)" id="taxa-conv">—</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">Tendência financeira — 8 semanas</div>
+        <div class="chart-box"><canvas id="fin-chart"></canvas></div>
+        <div style="display:flex;gap:10px;margin-top:8px;font-size:10px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:var(--teal);display:inline-block"></span><span style="color:var(--text3)">Receita</span></span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;background:var(--red);display:inline-block"></span><span style="color:var(--text3)">Despesas</span></span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:2px;border-top:2px dashed var(--accent);display:inline-block"></span><span style="color:var(--text3)">Lucro</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-h">Receita por treinamento (Kz)</div>
+        <div class="chart-box"><canvas id="train-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-h">Despesas detalhadas</div>
+        <div id="desp-list" style="font-size:13px;color:var(--text3)">Sem despesas registadas.</div>
+        <div class="total-ln"><span style="color:var(--text2)">Total despesas</span><span class="tv" id="total-desp">0 Kz</span></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-h">Comissões a pagar</div>
+        <div id="comm-list"></div>
+        <div class="total-ln"><span style="color:var(--text2)">Lucro líquido (teu)</span><span class="tv" id="lucro-liq">—</span></div>
+        <button class="btn btn-ghost" style="width:100%;margin-top:12px;font-size:12px" onclick="quickReport()">Gerar recibo de comissões ↗</button>
+      </div>
+      <div class="card">
+        <div class="card-h">Fila de remarketing</div>
+        <div class="rm-grid" id="rm-grid"></div>
+        <div id="rm-list" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
+        <button class="btn btn-ghost" style="width:100%;font-size:12px" onclick="aiAsk('Cria sequências de remarketing para os meus leads frios — prazos 12h, 24h, 48h e 72h — adaptadas a cada treinamento e ao público angolano.')">Criar sequência de remarketing ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: DADOS ── -->
+  <div id="tab-dados" style="display:none">
+    <div style="display:flex;gap:7px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <button class="btn btn-acc" id="mode-btn-m" onclick="inputMode('manual')">Inserir manualmente</button>
+      <button class="btn btn-ghost" id="mode-btn-c" onclick="inputMode('csv')">Importar CSV</button>
+      <button class="btn btn-ghost" onclick="downloadTemplate()">Descarregar modelo CSV</button>
+    </div>
+    <div id="mode-manual">
+      <div class="card" style="margin-bottom:10px">
+        <div class="sec-h">Leads e vendas</div>
+        <div class="sec-sub">Selecciona o treinamento e o período antes de preencher. Deixa vazio o que não tiveres.</div>
+        <div class="fgrid">
+          <div class="fg"><label>Treinamento</label><select id="f-train" style="width:100%"></select></div>
+          <div class="fg"><label>Período</label><select id="f-period"><option value="semana">Semana actual</option><option value="mes">Mês actual</option><option value="total">Total acumulado</option></select></div>
+          <div class="fg"><label>Formato</label><select id="f-fmt"><option value="ambos">Ambos</option><option value="presencial">Presencial</option><option value="online">Online</option></select></div>
+          <div class="fg"><label>Atenção — mensagens</label><input type="number" id="f-msgs" placeholder="ex: 45" min="0"></div>
+          <div class="fg"><label>Interesse — qualificados</label><input type="number" id="f-qual" placeholder="ex: 20" min="0"></div>
+          <div class="fg"><label>Desejo — quentes</label><input type="number" id="f-hot" placeholder="ex: 12" min="0"></div>
+          <div class="fg"><label>Acção — inscritos</label><input type="number" id="f-insc" placeholder="ex: 8" min="0"></div>
+          <div class="fg"><label>Não confirmados</label><input type="number" id="f-nc" placeholder="ex: 5" min="0"></div>
+          <div class="fg"><label>Frios — remarketing</label><input type="number" id="f-cold" placeholder="ex: 15" min="0"></div>
+          <div class="fg"><label>Receita (Kz)</label><input type="number" id="f-rev" placeholder="ex: 385000" min="0"></div>
+        </div>
+        <button class="btn btn-acc" onclick="saveLeads()">Guardar dados</button>
+      </div>
+      <div class="card">
+        <div class="sec-h">Despesas — opcional</div>
+        <div class="sec-sub">Preenche só o que tiveres. Nenhum campo é obrigatório.</div>
+        <div class="fgrid">
+          <div class="fg"><label>Período</label><select id="fd-period"><option value="semana">Semana</option><option value="mes">Mês</option></select></div>
+          <div class="fg"><label>Aluguer de sala (Kz)</label><input type="number" id="d-sala" placeholder="0" min="0"></div>
+          <div class="fg"><label>Transporte (Kz)</label><input type="number" id="d-transp" placeholder="0" min="0"></div>
+          <div class="fg"><label>Internet (Kz)</label><input type="number" id="d-inet" placeholder="0" min="0"></div>
+          <div class="fg"><label>Alimentação (Kz)</label><input type="number" id="d-food" placeholder="0" min="0"></div>
+          <div class="fg"><label>Anúncios (Kz)</label><input type="number" id="d-ads" placeholder="0" min="0"></div>
+          <div class="fg"><label>Outra despesa — nome</label><input type="text" id="d-oname" placeholder="ex: Impressão"></div>
+          <div class="fg"><label>Outra despesa — valor (Kz)</label><input type="number" id="d-oval" placeholder="0" min="0"></div>
+        </div>
+        <button class="btn btn-acc" onclick="saveDesps()">Guardar despesas</button>
+      </div>
+    </div>
+    <div id="mode-csv" style="display:none">
+      <div class="card">
+        <div class="sec-h">Importar dados via CSV</div>
+        <div class="sec-sub">Descarrega o modelo, preenche no Excel ou Google Sheets e carrega aqui.</div>
+        <div class="csv-zone" id="csv-zone" onclick="document.getElementById('csv-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+          <div style="font-size:28px;margin-bottom:8px">📄</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px">Clica para seleccionar o ficheiro CSV</div>
+          <div style="font-size:12px;color:var(--text3)">ou arrasta e larga aqui · .csv</div>
+        </div>
+        <input type="file" id="csv-input" accept=".csv,.txt" style="display:none" onchange="handleFile(event)">
+        <div class="csv-prev" id="csv-prev"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-acc" id="btn-import" onclick="importCSV()" style="display:none">Importar para o dashboard</button>
+          <button class="btn btn-ghost" onclick="downloadTemplate()">Descarregar modelo CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: CURSOS ── -->
+  <div id="tab-cursos" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="sec-h">Gerir treinamentos</div>
+        <div class="sec-sub" style="margin-bottom:0">Adiciona, edita ou remove os treinamentos do teu sistema.</div>
+      </div>
+      <button class="btn btn-acc" onclick="openModal()">+ Novo treinamento</button>
+    </div>
+    <div class="c-list" id="course-list"></div>
+    <div style="padding:1rem 1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);font-size:12px;color:var(--text3)">
+      Cada treinamento aparece automaticamente no dashboard, nos filtros e nos campos de inserção de dados.
+    </div>
+  </div>
+
+  <!-- ── TAB: IA ── -->
+  <div id="tab-ia" style="display:none">
+    <div class="ia-layout">
+      <div class="ia-chat">
+        <div class="ia-header">
+          <div class="ia-avatar">✦</div>
+          <div>
+            <div class="ia-name">Assistente FormFlow</div>
+            <div class="ia-status">Online — com acesso aos teus dados</div>
+          </div>
+        </div>
+        <div class="ia-msgs" id="ia-msgs">
+          <div class="ia-empty">
+            <div class="ie-icon">✦</div>
+            <p>Olá! Tenho acesso aos teus dados do dashboard.<br>Pergunta-me qualquer coisa — análise de funil, estratégia de vendas, oportunidades de crescimento ou o que quiseres.</p>
+          </div>
+        </div>
+        <div class="ia-input-row">
+          <textarea id="ia-input" placeholder="Pergunta sobre os teus dados, pede análise ou sugestões..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendIA()}"></textarea>
+          <button class="ia-send" id="ia-send" onclick="sendIA()">Enviar</button>
+        </div>
+      </div>
+      <div class="ia-sidebar">
+        <div class="ia-qs-h">Perguntas rápidas</div>
+        <button class="ia-q" onclick="aiAsk('Analisa o meu funil AIDA e diz-me onde estou a perder mais leads. Que acções concretas devo tomar para melhorar cada etapa?')">📊 Analisar funil AIDA</button>
+        <button class="ia-q" onclick="aiAsk('Com base nos meus dados actuais, quais são as 3 principais oportunidades para aumentar as vendas esta semana?')">🚀 Oportunidades de vendas</button>
+        <button class="ia-q" onclick="aiAsk('Qual dos meus treinamentos está a performar melhor? Que padrão posso replicar nos outros?')">🏆 Melhor treinamento</button>
+        <button class="ia-q" onclick="aiAsk('Tenho leads frios para remarketing. Cria uma sequência específica para 12h, 24h, 48h e 72h adaptada ao mercado angolano.')">🎯 Sequência de remarketing</button>
+        <button class="ia-q" onclick="aiAsk('Com base na minha taxa de conversão actual, quanto precisaria investir em anúncios para dobrar os inscritos no próximo mês?')">💰 Projecção de crescimento</button>
+        <button class="ia-q" onclick="aiAsk('Identifica os principais pontos de fricção no meu processo de vendas com base nos dados do dashboard.')">🔍 Pontos de fricção</button>
+        <button class="ia-q" onclick="aiAsk('Gera um relatório executivo desta semana: receita, conversão, comissões e 3 prioridades para a próxima semana.')">📋 Relatório executivo</button>
+        <button class="ia-q" onclick="aiAsk('Que tipo de conteúdo devo criar nas redes sociais para atrair mais leads qualificados com base no meu perfil de clientes?')">📱 Estratégia de conteúdo</button>
+        <div class="ia-info">
+          O assistente analisa os teus dados reais e responde com base no teu contexto específico — não com respostas genéricas.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: CONFIG ── -->
+  <div id="tab-config" style="display:none">
+    <div class="card" style="margin-bottom:10px">
+      <div class="sec-h">Comissões e metas</div>
+      <div class="sec-sub">Valores usados no cálculo automático. Deixa em branco os campos que não quiseres usar.</div>
+      <div class="fgrid">
+        <div class="fg"><label>Comissão Atendente 1 (%)</label><input type="number" id="cfg-a1" placeholder="ex: 10" min="0" max="100"></div>
+        <div class="fg"><label>Comissão Atendente 2 (%)</label><input type="number" id="cfg-a2" placeholder="ex: 10" min="0" max="100"></div>
+        <div class="fg"><label>Prospecção (% da receita)</label><input type="number" id="cfg-pros" placeholder="ex: 16" min="0" max="100"></div>
+        <div class="fg"><label>Meta semanal de receita (Kz)</label><input type="number" id="cfg-meta" placeholder="ex: 500000" min="0"></div>
+      </div>
+      <button class="btn btn-acc" onclick="saveConfig()">Guardar configurações</button>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="sec-h">Dados da instituição</div>
+      <div class="sec-sub">Actualiza o nome e o país associados à tua conta.</div>
+      <div class="fgrid">
+        <div class="fg"><label>Nome da instituição</label><input type="text" id="cfg-inst" placeholder="Nome da instituição"></div>
+        <div class="fg"><label>País</label><select id="cfg-country"><option>Angola</option><option>Moçambique</option><option>Portugal</option><option>Brasil</option><option>Cabo Verde</option><option>Outro</option></select></div>
+      </div>
+      <button class="btn btn-acc" onclick="saveInstitution()">Guardar</button>
+    </div>
+    <div class="card">
+      <div class="sec-h">Sessão e dados</div>
+      <div class="sec-sub" style="line-height:1.8">Os dados ficam guardados neste browser.<br>Para aceder noutro dispositivo: exporta o CSV e importa no novo dispositivo.<br>Usa <strong>Exportar CSV</strong> regularmente como backup.</div>
+      <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="exportCSV()">Exportar backup CSV</button>
+        <button class="btn btn-red" onclick="clearAllData()">Limpar todos os dados</button>
+        <button class="btn btn-ghost" onclick="confirmLogout()">Terminar sessão</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-inner -->
+</div><!-- /screen-app -->
+
+<!-- ══ MODAL: CURSO ══ -->
+<div class="overlay" id="modal-course">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal()">×</button>
+    <div class="modal-h" id="modal-h">Novo treinamento</div>
+    <div class="modal-sub">Preenche os dados. Só o nome é obrigatório.</div>
+    <div class="fgrid" style="grid-template-columns:1fr 1fr">
+      <div class="fg" style="grid-column:1/-1"><label>Nome *</label><input type="text" id="mc-name" placeholder="ex: Método Versa"></div>
+      <div class="fg"><label>Ticket (Kz)</label><input type="number" id="mc-ticket" placeholder="ex: 77000" min="0"></div>
+      <div class="fg"><label>Formato</label><select id="mc-fmt"><option value="presencial">Presencial</option><option value="online">Online</option><option value="ambos">Híbrido</option></select></div>
+      <div class="fg" style="grid-column:1/-1"><label>Cor de identificação</label><div class="cp" id="cp"></div></div>
+      <div class="fg" style="grid-column:1/-1"><label>Descrição (opcional)</label><textarea id="mc-desc" placeholder="Breve descrição" rows="2" style="resize:vertical"></textarea></div>
+    </div>
+    <input type="hidden" id="mc-id">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-acc" onclick="saveCourse()">Guardar</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════════════════════
+const PALETTE=['#7B6FFF','#00E5A0','#FFB020','#FF5252','#4FC3F7','#FF6B9D','#A78BFA','#34D399','#FB923C','#60A5FA'];
+const K_DATA='ff3_data',K_USERS='ff3_users',K_SESS='ff3_sess',K_CFG='ff3_cfg',K_HIST='ff3_hist';
+
+const $ = id => document.getElementById(id);
+const fmt = n => isNaN(n)||n===''?'—':Math.round(n).toLocaleString('pt-PT');
+const pct = (a,b) => b>0?Math.round(a/b*100):0;
+const gn  = id => { const v=parseFloat($(id)?.value); return isNaN(v)?0:v; };
+const gs  = id => $(id)?.value?.trim()||'';
+const now = () => new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+
+// ══════════════════════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════════════════════
+const lsGet = k => { try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){return null;} };
+const lsSet = (k,v) => { try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){return false;} };
+
+// ══════════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════════
+let USER=null, DATA=null, CFG=null;
+let curPeriod='semana', curTrain='all';
+let csvRows=null, mcColor=PALETTE[0], editId=null;
+let iaHistory=[];
+let finChart=null, trainChart=null;
+
+const GC='rgba(255,255,255,.05)', TC='#4A4870';
+
+const DEFAULT_COURSES = [
+  {id:'c1',name:'Método Versa',ticket:77000,format:'presencial',color:'#7B6FFF',desc:'Marketing avançado para empreendedores'},
+  {id:'c2',name:'SSI-15D',ticket:25000,format:'online',color:'#00E5A0',desc:'Salário na internet em 15 dias'},
+  {id:'c3',name:'Tráfego Pago',ticket:97000,format:'presencial',color:'#FFB020',desc:'Sistema de crescimento acelerado'},
+];
+
+function defaultData(){
+  return {
+    courses: DEFAULT_COURSES.map(c=>({...c})),
+    periods:{
+      semana:{
+        all:{msgs:45,qual:20,hot:12,insc:8,nc:5,cold:15,rev:385000,fmt:'ambos'},
+        c1:{msgs:18,qual:9,hot:6,insc:3,nc:2,cold:5,rev:231000,fmt:'presencial'},
+        c2:{msgs:16,qual:7,hot:4,insc:4,nc:2,cold:7,rev:100000,fmt:'online'},
+        c3:{msgs:11,qual:4,hot:2,insc:1,nc:1,cold:3,rev:97000,fmt:'presencial'},
+      },
+      mes:{
+        all:{msgs:180,qual:82,hot:44,insc:31,nc:18,cold:52,rev:1540000,fmt:'ambos'},
+        c1:{msgs:72,qual:36,hot:22,insc:12,nc:7,cold:18,rev:924000,fmt:'presencial'},
+        c2:{msgs:64,qual:28,hot:15,insc:16,nc:8,cold:26,rev:400000,fmt:'online'},
+        c3:{msgs:44,qual:18,hot:7,insc:3,nc:3,cold:8,rev:291000,fmt:'presencial'},
+      },
+      total:{
+        all:{msgs:540,qual:246,hot:132,insc:93,nc:54,cold:52,rev:4620000,fmt:'ambos'},
+        c1:{msgs:216,qual:108,hot:66,insc:36,nc:21,cold:18,rev:2772000,fmt:'presencial'},
+        c2:{msgs:192,qual:84,hot:45,insc:48,nc:24,cold:26,rev:1200000,fmt:'online'},
+        c3:{msgs:132,qual:54,hot:21,insc:9,nc:9,cold:8,rev:873000,fmt:'presencial'},
+      }
+    },
+    desps:{
+      semana:{sala:0,transp:0,inet:0,food:0,ads:0,oname:'',oval:0},
+      mes:{sala:0,transp:0,inet:0,food:0,ads:0,oname:'',oval:0}
+    },
+    hist:{
+      labels:['S1','S2','S3','S4','S5','S6','S7','S8'],
+      rev:[210000,245000,198000,310000,275000,340000,295000,385000],
+      desp:[42000,48000,38000,61000,52000,67000,58000,52000],
+      byCourse:{}
+    }
+  };
+}
+
+function defaultCFG(){ return {a1:'',a2:'',pros:'',meta:''}; }
+
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
+function authTab(tab,btn){
+  document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  $('pane-login').style.display = tab==='login'?'block':'none';
+  $('pane-register').style.display = tab==='register'?'block':'none';
+}
+
+function showErr(id,msg){ const el=$(id); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',5000); }
+
+function doLogin(){
+  const email=gs('l-email').toLowerCase(), pass=gs('l-pass');
+  if(!email||!pass){ showErr('err-login','Preenche o email e a senha.'); return; }
+  const users=lsGet(K_USERS)||{};
+  if(!users[email]){ showErr('err-login','Conta não encontrada. Cria uma conta primeiro.'); return; }
+  if(users[email].pass!==btoa(pass)){ showErr('err-login','Senha incorrecta.'); return; }
+  USER=users[email];
+  lsSet(K_SESS,{email,ts:Date.now()});
+  loadUserData();
+  const profile=lsGet('ff3_profile_'+email);
+  if(!profile?.institution){ initOnboard(); goScreen('onboard'); }
+  else goApp();
+}
+
+function doRegister(){
+  const name=gs('r-name'), email=gs('r-email').toLowerCase(), pass=gs('r-pass'), pass2=gs('r-pass2');
+  if(!name){ showErr('err-reg','Introduz o teu nome.'); return; }
+  if(!email.includes('@')){ showErr('err-reg','Email inválido.'); return; }
+  if(pass.length<6){ showErr('err-reg','A senha deve ter mínimo 6 caracteres.'); return; }
+  if(pass!==pass2){ showErr('err-reg','As senhas não coincidem.'); return; }
+  const users=lsGet(K_USERS)||{};
+  if(users[email]){ showErr('err-reg','Este email já está registado.'); return; }
+  users[email]={name,email,pass:btoa(pass),createdAt:Date.now()};
+  lsSet(K_USERS,users);
+  USER=users[email];
+  lsSet(K_SESS,{email,ts:Date.now()});
+  loadUserData();
+  initOnboard();
+  goScreen('onboard');
+}
+
+function confirmLogout(){
+  if(confirm('Terminar sessão?')) doLogout();
+}
+
+function doLogout(){
+  localStorage.removeItem(K_SESS);
+  USER=null; DATA=null; CFG=null; iaHistory=[];
+  goScreen('auth');
+}
+
+function checkSession(){
+  const s=lsGet(K_SESS);
+  if(!s) return false;
+  const users=lsGet(K_USERS)||{};
+  if(!users[s.email]) return false;
+  USER=users[s.email];
+  loadUserData();
+  const profile=lsGet('ff3_profile_'+s.email);
+  if(!profile?.institution){ initOnboard(); goScreen('onboard'); }
+  else goApp();
+  return true;
+}
+
+function loadUserData(){
+  CFG = lsGet(K_CFG+'_'+USER.email) || defaultCFG();
+  DATA = lsGet(K_DATA+'_'+USER.email) || defaultData();
+}
+
+function saveData(){ lsSet(K_DATA+'_'+USER.email, DATA); }
+function saveCFG(){ lsSet(K_CFG+'_'+USER.email, CFG); }
+
+// ══════════════════════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════════════════════
+let obCount=0;
+
+function initOnboard(){
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('on'));
+  $('obs-1').classList.add('on');
+  obCount=0;
+  $('ob-courses').innerHTML='';
+  DEFAULT_COURSES.forEach(c=>addObCourse(c));
+}
+
+function addObCourse(preset=null){
+  obCount++;
+  const id='ob-r-'+obCount;
+  const row=document.createElement('div');
+  row.className='ob-course-row'; row.id=id;
+  row.innerHTML=`
+    <input type="text" placeholder="Nome do treinamento *" value="${preset?.name||''}">
+    <input type="number" placeholder="Ticket Kz" value="${preset?.ticket||''}" min="0">
+    <select>
+      <option value="presencial" ${preset?.format==='presencial'?'selected':''}>Presencial</option>
+      <option value="online" ${preset?.format==='online'?'selected':''}>Online</option>
+      <option value="ambos" ${preset?.format==='ambos'?'selected':''}>Híbrido</option>
+    </select>
+    <button class="ob-rm" onclick="document.getElementById('${id}').remove()">×</button>
+  `;
+  $('ob-courses').appendChild(row);
+}
+
+function obNext(step){
+  if(step===1){
+    const inst=gs('ob-inst');
+    if(!inst){ toast('Introduz o nome da instituição.'); return; }
+    lsSet('ff3_profile_'+USER.email,{institution:inst,country:gs('ob-country'),createdAt:Date.now()});
+  }
+  if(step===2){
+    const courses=[];
+    document.querySelectorAll('#ob-courses .ob-course-row').forEach((row,i)=>{
+      const ins=row.querySelectorAll('input,select');
+      const name=ins[0].value.trim();
+      if(!name) return;
+      courses.push({id:'c'+(Date.now()+i),name,ticket:parseFloat(ins[1].value)||0,format:ins[2].value,color:PALETTE[i%PALETTE.length],desc:''});
+    });
+    if(!courses.length){ toast('Adiciona pelo menos um treinamento.'); return; }
+    DATA.courses=courses;
+    saveData();
+    $('ob-done-courses').innerHTML=`<span style="color:var(--teal)">✓</span> ${courses.length} treinamento(s) configurado(s)`;
+  }
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('on'));
+  $('obs-'+(step+1)).classList.add('on');
+}
+
+function finishOnboard(){ goApp(); }
+
+// ══════════════════════════════════════════════════════════════
+// APP
+// ══════════════════════════════════════════════════════════════
+function goScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-'+name).classList.add('active');
+}
+
+function goApp(){
+  goScreen('app');
+  const p=lsGet('ff3_profile_'+USER.email)||{};
+  const inst=p.institution||'FormFlow';
+  const initials=inst.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  $('nav-logo').textContent=initials;
+  $('nav-name').textContent=inst;
+  $('nav-country').textContent=p.country||'Angola';
+  $('u-dot').textContent=USER.name[0].toUpperCase();
+  $('u-name').textContent=USER.name.split(' ')[0];
+  $('cfg-inst').value=inst;
+  $('cfg-country').value=p.country||'Angola';
+  initCFGForm();
+  buildPills();
+  buildTrainSelect();
+  buildCourseList();
+  checkStorage();
+  render();
+}
+
+function checkStorage(){
+  try{ localStorage.setItem('ff_test','1'); localStorage.removeItem('ff_test');
+    $('sdot').classList.remove('warn');
+    $('sbar-msg').textContent='Dados guardados localmente · exporta CSV regularmente como backup';
+  }catch(e){
+    $('sdot').classList.add('warn');
+    $('sbar-msg').textContent='Armazenamento limitado — exporta os dados manualmente';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+function goTab(tab,btn){
+  ['dashboard','dados','cursos','ia','config'].forEach(t=>{ $('tab-'+t).style.display=t===tab?'block':'none'; });
+  document.querySelectorAll('.nt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(tab==='cursos') buildCourseList();
+  if(tab==='config') initCFGForm();
+}
+
+// ══════════════════════════════════════════════════════════════
+// PERIOD / TRAINING
+// ══════════════════════════════════════════════════════════════
+function setPeriod(p,btn){
+  curPeriod=p;
+  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+}
+
+function setTrain(t,btn){
+  curTrain=t;
+  buildPills();
+  render();
+}
+
+function buildPills(){
+  const c=$('train-pills'); if(!c) return;
+  const courses=DATA.courses||[];
+  let html=`<button class="tp ${curTrain==='all'?'on':''}" onclick="setTrain('all',this)" style="${curTrain==='all'?'border-color:var(--accent);color:var(--accent);background:rgba(123,111,255,.1)':''}">
+    <span class="tdot" style="background:var(--accent)"></span>Todos
+  </button>`;
+  courses.forEach(c2=>{
+    const on=curTrain===c2.id;
+    html+=`<button class="tp" onclick="setTrain('${c2.id}',this)" style="${on?`border-color:${c2.color};color:${c2.color};background:${c2.color}18`:''}" >
+      <span class="tdot" style="background:${c2.color}"></span>${c2.name}
+    </button>`;
+  });
+  c.innerHTML=html;
+}
+
+function buildTrainSelect(){
+  const sel=$('f-train'); if(!sel) return;
+  const courses=DATA.courses||[];
+  sel.innerHTML=`<option value="all">Todos (geral)</option>`+courses.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// SAVE DATA
+// ══════════════════════════════════════════════════════════════
+function saveLeads(){
+  const tid=gs('f-train')||'all', p=gs('f-period')||'semana', fmt=gs('f-fmt')||'ambos';
+  if(!DATA.periods[p]) DATA.periods[p]={};
+  if(!DATA.periods[p][tid]) DATA.periods[p][tid]={msgs:0,qual:0,hot:0,insc:0,nc:0,cold:0,rev:0,fmt:'ambos'};
+  const d=DATA.periods[p][tid];
+  const map={msgs:'f-msgs',qual:'f-qual',hot:'f-hot',insc:'f-insc',nc:'f-nc',cold:'f-cold',rev:'f-rev'};
+  Object.entries(map).forEach(([k,id])=>{ const v=gn(id); if(v||v===0) d[k]=v; });
+  d.fmt=fmt;
+  syncAll(p);
+  updateHist();
+  saveData();
+  toast('Dados guardados ✓');
+  render();
+}
+
+function saveDesps(){
+  const p=gs('fd-period')||'semana';
+  if(!DATA.desps[p]) DATA.desps[p]={sala:0,transp:0,inet:0,food:0,ads:0,oname:'',oval:0};
+  const d=DATA.desps[p];
+  d.sala=gn('d-sala'); d.transp=gn('d-transp'); d.inet=gn('d-inet');
+  d.food=gn('d-food'); d.ads=gn('d-ads');
+  d.oname=$('d-oname').value||'Outra'; d.oval=gn('d-oval');
+  DATA.hist.desp[7]=totalDesp(p)||DATA.hist.desp[7];
+  saveData();
+  toast('Despesas guardadas ✓');
+  render();
+}
+
+function syncAll(p){
+  const cs=DATA.courses||[];
+  const all=DATA.periods[p]['all']||{};
+  ['msgs','qual','hot','insc','nc','cold'].forEach(f=>{
+    all[f]=cs.reduce((s,c)=>s+(DATA.periods[p][c.id]?.[f]||0),0);
+  });
+  all.rev=cs.reduce((s,c)=>s+(DATA.periods[p][c.id]?.rev||0),0);
+  DATA.periods[p]['all']=all;
+}
+
+function updateHist(){
+  const all=DATA.periods.semana?.all||{};
+  DATA.hist.rev[7]=all.rev||DATA.hist.rev[7];
+  (DATA.courses||[]).forEach(c=>{
+    if(!DATA.hist.byCourse[c.id]) DATA.hist.byCourse[c.id]=new Array(8).fill(0);
+    DATA.hist.byCourse[c.id][7]=DATA.periods.semana?.[c.id]?.rev||0;
+  });
+}
+
+function saveConfig(){
+  CFG={
+    a1: $('cfg-a1').value===''?'':parseFloat($('cfg-a1').value),
+    a2: $('cfg-a2').value===''?'':parseFloat($('cfg-a2').value),
+    pros: $('cfg-pros').value===''?'':parseFloat($('cfg-pros').value),
+    meta: $('cfg-meta').value===''?'':parseFloat($('cfg-meta').value)
+  };
+  saveCFG();
+  toast('Configurações guardadas ✓');
+  render();
+}
+
+function saveInstitution(){
+  const inst=gs('cfg-inst'), country=gs('cfg-country');
+  if(!inst){ toast('Introduz o nome da instituição.'); return; }
+  const p=lsGet('ff3_profile_'+USER.email)||{};
+  p.institution=inst; p.country=country;
+  lsSet('ff3_profile_'+USER.email,p);
+  $('nav-name').textContent=inst;
+  $('nav-country').textContent=country;
+  $('nav-logo').textContent=inst.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  toast('Dados actualizados ✓');
+}
+
+function initCFGForm(){
+  $('cfg-a1').value=CFG.a1!==''&&CFG.a1!==undefined?CFG.a1:'';
+  $('cfg-a2').value=CFG.a2!==''&&CFG.a2!==undefined?CFG.a2:'';
+  $('cfg-pros').value=CFG.pros!==''&&CFG.pros!==undefined?CFG.pros:'';
+  $('cfg-meta').value=CFG.meta!==''&&CFG.meta!==undefined?CFG.meta:'';
+}
+
+// ══════════════════════════════════════════════════════════════
+// COURSES
+// ══════════════════════════════════════════════════════════════
+function buildCourseList(){
+  const el=$('course-list'); if(!el) return;
+  const cs=DATA.courses||[];
+  el.innerHTML=cs.length?cs.map(c=>`
+    <div class="ci">
+      <div class="ci-dot" style="background:${c.color}"></div>
+      <div class="ci-name">${c.name}</div>
+      <div class="ci-ticket">${c.ticket?fmt(c.ticket)+' Kz':'—'}</div>
+      <div class="ci-fmt">${c.format||'—'}</div>
+      <div class="ci-acts">
+        <button class="btn btn-ghost btn-sm" onclick="openModal('${c.id}')">Editar</button>
+        <button class="btn btn-red btn-sm" onclick="deleteCourse('${c.id}')">Remover</button>
+      </div>
+    </div>
+  `).join(''):'<div style="font-size:13px;color:var(--text3);padding:1rem">Nenhum treinamento ainda.</div>';
+}
+
+function openModal(id=null){
+  editId=id; mcColor=PALETTE[0];
+  $('mc-name').value=''; $('mc-ticket').value=''; $('mc-fmt').value='presencial'; $('mc-desc').value=''; $('mc-id').value='';
+  if(id){
+    const c=(DATA.courses||[]).find(x=>x.id===id);
+    if(c){ $('mc-name').value=c.name; $('mc-ticket').value=c.ticket||''; $('mc-fmt').value=c.format||'presencial'; $('mc-desc').value=c.desc||''; $('mc-id').value=c.id; mcColor=c.color||PALETTE[0]; }
+    $('modal-h').textContent='Editar treinamento';
+  } else { $('modal-h').textContent='Novo treinamento'; }
+  $('cp').innerHTML=PALETTE.map(col=>`<div class="cs ${col===mcColor?'on':''}" style="background:${col}" onclick="pickColor('${col}',this)"></div>`).join('');
+  $('modal-course').classList.add('on');
+}
+
+function pickColor(col,el){ mcColor=col; document.querySelectorAll('.cs').forEach(s=>s.classList.remove('on')); el.classList.add('on'); }
+function closeModal(){ $('modal-course').classList.remove('on'); }
+
+function saveCourse(){
+  const name=gs('mc-name');
+  if(!name){ toast('Introduz o nome do treinamento.'); return; }
+  const obj={id:gs('mc-id')||'c'+Date.now(),name,ticket:gn('mc-ticket'),format:gs('mc-fmt'),color:mcColor,desc:gs('mc-desc')};
+  if(!DATA.courses) DATA.courses=[];
+  const idx=DATA.courses.findIndex(c=>c.id===obj.id);
+  if(idx>=0) DATA.courses[idx]={...DATA.courses[idx],...obj};
+  else DATA.courses.push(obj);
+  saveData(); closeModal();
+  buildPills(); buildTrainSelect(); buildCourseList();
+  render();
+  toast(idx>=0?'Treinamento actualizado ✓':'Treinamento adicionado ✓');
+}
+
+function deleteCourse(id){
+  if(!confirm('Remover este treinamento?')) return;
+  DATA.courses=(DATA.courses||[]).filter(c=>c.id!==id);
+  if(curTrain===id) curTrain='all';
+  saveData(); buildPills(); buildTrainSelect(); buildCourseList(); render();
+  toast('Treinamento removido');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CSV
+// ══════════════════════════════════════════════════════════════
+function inputMode(m){
+  $('mode-manual').style.display=m==='manual'?'block':'none';
+  $('mode-csv').style.display=m==='csv'?'block':'none';
+  $('mode-btn-m').className='btn '+(m==='manual'?'btn-acc':'btn-ghost');
+  $('mode-btn-c').className='btn '+(m==='csv'?'btn-acc':'btn-ghost');
+}
+
+function downloadTemplate(){
+  const cs=DATA.courses||[];
+  const hdr='periodo,treinamento_id,formato,mensagens,qualificados,quentes,inscritos,nao_confirmados,frios,receita,sala,transporte,internet,alimentacao,anuncios,outra_nome,outra_valor';
+  const rows=cs.map(c=>`semana,${c.id},${c.format||'presencial'},0,0,0,0,0,0,0,0,0,0,0,0,,0`);
+  dl([hdr,...rows].join('\n'),'modelo_formflow.csv');
+}
+
+function dl(content,filename){
+  const blob=new Blob([content],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+}
+
+function handleFile(e){ if(e.target.files[0]) parseCSV(e.target.files[0]); }
+function handleDrop(e){ e.preventDefault(); $('csv-zone').classList.remove('drag'); if(e.dataTransfer.files[0]) parseCSV(e.dataTransfer.files[0]); }
+
+function parseCSV(file){
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>{
+    csvRows=r.data;
+    const p=$('csv-prev'); p.style.display='block'; p.textContent=JSON.stringify(csvRows.slice(0,2),null,2)+'...';
+    $('btn-import').style.display='inline-block';
+    toast(`${csvRows.length} linha(s) detectadas`);
+  },error:()=>toast('Erro ao ler o ficheiro')});
+}
+
+function importCSV(){
+  if(!csvRows) return;
+  csvRows.forEach(row=>{
+    const p=row.periodo||'semana', tid=row.treinamento_id||'all';
+    if(!DATA.periods[p]) DATA.periods[p]={};
+    if(!DATA.periods[p][tid]) DATA.periods[p][tid]={};
+    const d=DATA.periods[p][tid];
+    if(row.mensagens) d.msgs=parseInt(row.mensagens)||0;
+    if(row.qualificados) d.qual=parseInt(row.qualificados)||0;
+    if(row.quentes) d.hot=parseInt(row.quentes)||0;
+    if(row.inscritos) d.insc=parseInt(row.inscritos)||0;
+    if(row.nao_confirmados) d.nc=parseInt(row.nao_confirmados)||0;
+    if(row.frios) d.cold=parseInt(row.frios)||0;
+    if(row.receita) d.rev=parseFloat(row.receita)||0;
+    if(row.formato) d.fmt=row.formato;
+    if(!DATA.desps[p]) DATA.desps[p]={sala:0,transp:0,inet:0,food:0,ads:0,oname:'',oval:0};
+    const dd=DATA.desps[p];
+    if(row.sala) dd.sala=parseFloat(row.sala)||0;
+    if(row.transporte) dd.transp=parseFloat(row.transporte)||0;
+    if(row.internet) dd.inet=parseFloat(row.internet)||0;
+    if(row.alimentacao) dd.food=parseFloat(row.alimentacao)||0;
+    if(row.anuncios) dd.ads=parseFloat(row.anuncios)||0;
+    if(row.outra_nome) dd.oname=row.outra_nome;
+    if(row.outra_valor) dd.oval=parseFloat(row.outra_valor)||0;
+  });
+  ['semana','mes','total'].forEach(p=>{ if(DATA.periods[p]) syncAll(p); });
+  updateHist(); saveData();
+  csvRows=null;
+  $('csv-prev').style.display='none';
+  $('btn-import').style.display='none';
+  toast(`Dados importados ✓`);
+  render();
+}
+
+function exportCSV(){
+  const cs=DATA.courses||[];
+  const rows=[['periodo','treinamento_id','treinamento_nome','formato','mensagens','qualificados','quentes','inscritos','nao_confirmados','frios','receita','sala','transporte','internet','alimentacao','anuncios','outra_nome','outra_valor']];
+  ['semana','mes','total'].forEach(p=>{
+    cs.forEach(c=>{
+      const d=DATA.periods[p]?.[c.id]||{}, dd=DATA.desps[p]||{};
+      rows.push([p,c.id,c.name,d.fmt||'',d.msgs||0,d.qual||0,d.hot||0,d.insc||0,d.nc||0,d.cold||0,d.rev||0,dd.sala||0,dd.transp||0,dd.inet||0,dd.food||0,dd.ads||0,dd.oname||'',dd.oval||0]);
+    });
+  });
+  dl(rows.map(r=>r.join(',')).join('\n'),'backup_formflow_'+new Date().toISOString().slice(0,10)+'.csv');
+  toast('CSV exportado ✓');
+}
+
+function clearAllData(){
+  if(!confirm('Tens a certeza? Todos os dados serão apagados. Exporta primeiro se quiseres guardar uma cópia.')) return;
+  DATA=defaultData(); saveData(); toast('Dados limpos'); render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════
+function getCur(){ return DATA.periods[curPeriod]?.[curTrain==='all'?'all':curTrain]||{msgs:0,qual:0,hot:0,insc:0,nc:0,cold:0,rev:0}; }
+function getCurName(){ if(curTrain==='all') return 'todos os treinamentos'; return (DATA.courses||[]).find(c=>c.id===curTrain)?.name||''; }
+function totalDesp(p){ const d=DATA.desps?.[p]||{}; return (d.sala||0)+(d.transp||0)+(d.inet||0)+(d.food||0)+(d.ads||0)+(d.oval||0); }
+
+function renderAlerts(){
+  const bar=$('alert-bar');
+  const rev=DATA.hist.rev;
+  const last=rev[rev.length-1], prev=rev[rev.length-2];
+  const lucros=rev.map((r,i)=>r-(DATA.hist.desp[i]||0));
+  const als=[];
+  if(last>prev){ const g=pct(last-prev,prev); als.push({t:'up',m:`<strong>Crescimento detectado:</strong> receita subiu ${g}% vs semana anterior.`}); }
+  if(CFG.meta&&last>=(CFG.meta||0)&&CFG.meta!=='') als.push({t:'up',m:`<strong>Meta atingida:</strong> ${fmt(last)} Kz de ${fmt(CFG.meta)} Kz definidos.`});
+  if(lucros[lucros.length-1]<lucros[lucros.length-2]&&lucros[lucros.length-2]>0) als.push({t:'dn',m:`<strong>Alerta:</strong> lucro caiu vs semana anterior. Verifica despesas e conversões.`});
+  const t3=rev.slice(-3); if(t3[2]<t3[1]&&t3[1]<t3[0]) als.push({t:'warn',m:`<strong>Tendência de queda:</strong> 3 semanas consecutivas a descer.`});
+  if(!als.length) als.push({t:'up',m:`<strong>Sistema estável:</strong> sem alertas activos esta semana.`});
+  bar.innerHTML=als.map(a=>{
+    const cls=a.t==='up'?'al-up':a.t==='dn'?'al-dn':'al-warn';
+    const ic=a.t==='up'?'↑':a.t==='dn'?'↓':'!';
+    const bg=a.t==='up'?'rgba(0,229,160,.2)':a.t==='dn'?'rgba(255,82,82,.2)':'rgba(255,176,32,.2)';
+    return `<div class="al ${cls}"><div class="al-ic" style="background:${bg}">${ic}</div><span>${a.m}</span></div>`;
+  }).join('');
+}
+
+function render(){
+  const d=getCur(), desp=totalDesp(curPeriod), lucro=d.rev-desp;
+  const metaPct=CFG.meta&&CFG.meta!==''?pct(d.rev,CFG.meta):null;
+
+  renderAlerts();
+  $('funil-lbl').textContent=getCurName();
+
+  // METRICS
+  const ms=[
+    {l:'Atenção',v:d.msgs,s:'mensagens recebidas',cl:'m-v'},
+    {l:'Interesse',v:d.qual,s:pct(d.qual,d.msgs)+'% das mensagens',cl:'m-b'},
+    {l:'Desejo',v:d.hot,s:'leads quentes',cl:'m-a'},
+    {l:'Acção — Inscritos',v:d.insc,s:pct(d.insc,d.qual)+'% dos qualificados',cl:'m-t'},
+    {l:'Não confirmados',v:d.nc,s:'em decisão',cl:'m-r'},
+    {l:'Frios — remarketing',v:d.cold,s:'para reactivar',cl:'m-v'},
+    {l:'Receita (Kz)',v:fmt(d.rev),s:metaPct!==null?`meta: ${metaPct}%`:'',cl:'m-t'},
+    {l:'Lucro líquido (Kz)',v:fmt(Math.max(0,lucro)),s:'após despesas',cl:'m-b'},
+  ];
+  $('metrics-grid').innerHTML=ms.map(m=>`<div class="metric ${m.cl}"><div class="lbl">${m.l}</div><div class="val">${m.v}</div><div class="sub">${m.s}</div></div>`).join('');
+
+  // AIDA
+  const aida=[
+    {s:'Atenção',desc:'Mensagens',val:d.msgs,c:'#7B6FFF'},
+    {s:'Interesse',desc:'Qualificados',val:d.qual,c:'#4FC3F7'},
+    {s:'Desejo',desc:'Leads quentes',val:d.hot,c:'#FFB020'},
+    {s:'Acção',desc:'Inscritos',val:d.insc,c:'#00E5A0'},
+  ];
+  $('aida').innerHTML=aida.map((a,i)=>{
+    const w=d.msgs>0?Math.max(15,Math.round(a.val/d.msgs*100)):15;
+    const p2=i===0?null:pct(a.val,aida[i-1].val);
+    return `<div class="ar"><div class="ar-lbl">${a.s}</div><div class="ar-bwrap"><div class="ar-bar" style="width:${w}%;background:${a.c}"><span>${a.val} — ${a.desc}</span></div></div><div class="ar-pct">${p2===null?'—':p2+'%'}</div></div>`;
+  }).join('');
+  $('taxa-conv').textContent=pct(d.insc,d.msgs)+'%';
+
+  // CHARTS
+  const hist=DATA.hist;
+  const lucros=hist.rev.map((r,i)=>r-(hist.desp[i]||0));
+  if(finChart) finChart.destroy();
+  finChart=new Chart($('fin-chart'),{
+    type:'line',
+    data:{labels:hist.labels,datasets:[
+      {label:'Receita',data:hist.rev,borderColor:'#00E5A0',backgroundColor:'rgba(0,229,160,.06)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#00E5A0',borderWidth:2},
+      {label:'Despesas',data:hist.desp,borderColor:'#FF5252',backgroundColor:'rgba(255,82,82,.04)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#FF5252',borderWidth:2},
+      {label:'Lucro',data:lucros,borderColor:'#7B6FFF',tension:.4,fill:false,pointRadius:3,pointBackgroundColor:'#7B6FFF',borderWidth:2,borderDash:[5,4]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'JetBrains Mono'}}},y:{grid:{color:GC},ticks:{color:TC,font:{size:10,family:'JetBrains Mono'},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  const cs=DATA.courses||[];
+  if(trainChart) trainChart.destroy();
+  trainChart=new Chart($('train-chart'),{
+    type:'bar',
+    data:{labels:hist.labels,datasets:cs.map(c=>({
+      label:c.name,
+      data:hist.byCourse[c.id]||new Array(8).fill(0),
+      backgroundColor:c.color+'BB',borderRadius:4,borderSkipped:false
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:cs.length>1,labels:{color:TC,font:{size:10,family:'JetBrains Mono'},boxWidth:10,padding:8}}},
+      scales:{x:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10}}},y:{stacked:true,grid:{color:GC},ticks:{color:TC,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  // DESPESAS
+  const dobj=DATA.desps?.[curPeriod]||{};
+  const ditems=[{n:'Aluguer de sala',v:dobj.sala||0},{n:'Transporte',v:dobj.transp||0},{n:'Internet',v:dobj.inet||0},{n:'Alimentação',v:dobj.food||0},{n:'Anúncios',v:dobj.ads||0},{n:dobj.oname||'Outra',v:dobj.oval||0}].filter(i=>i.v>0);
+  $('desp-list').innerHTML=ditems.length?ditems.map(i=>`<div class="ri"><span class="rn">${i.n}</span><span class="rv">${fmt(i.v)} Kz</span></div>`).join(''):'<span style="color:var(--text3);font-size:12px">Sem despesas registadas.</span>';
+  $('total-desp').textContent=fmt(desp)+' Kz';
+
+  // COMISSOES
+  const a1=CFG.a1!==''?parseFloat(CFG.a1):null;
+  const a2=CFG.a2!==''?parseFloat(CFG.a2):null;
+  const pros=CFG.pros!==''?parseFloat(CFG.pros):null;
+  const comms=[];
+  if(a1!==null) comms.push({n:`Atendente 1 — ${a1}% do lucro`,v:Math.round(Math.max(0,lucro)*a1/100)});
+  if(a2!==null) comms.push({n:`Atendente 2 — ${a2}% do lucro`,v:Math.round(Math.max(0,lucro)*a2/100)});
+  if(pros!==null) comms.push({n:`Prospecção — ${pros}% da receita`,v:Math.round(d.rev*pros/100)});
+  const totalComm=comms.reduce((s,c)=>s+c.v,0);
+  const lucroLiq=Math.max(0,lucro)-totalComm;
+  $('comm-list').innerHTML=comms.length?comms.map(c=>`<div class="ri"><span class="rn">${c.n}</span><span class="rv">${fmt(c.v)} Kz</span></div>`).join(''):'<div style="font-size:12px;color:var(--text3)">Configura as comissões no separador Configurar.</div>';
+  $('lucro-liq').textContent=fmt(Math.max(0,lucroLiq))+' Kz';
+
+  // REMARKETING
+  const cold=d.cold||0;
+  $('rm-grid').innerHTML=[{p:'12h',n:Math.round(cold*.25),cl:'urg'},{p:'24h',n:Math.round(cold*.35),cl:'hot'},{p:'48h',n:Math.round(cold*.25),cl:'warm'},{p:'72h',n:Math.round(cold*.15),cl:'cold'}]
+    .map(r=>`<div class="rmb ${r.cl}"><div class="rt">Fila ${r.p}</div><div class="rv">${r.n}</div></div>`).join('');
+  $('rm-list').innerHTML=cold>0
+    ?cs.map(c=>{const n=DATA.periods[curPeriod]?.[c.id]?.cold||0;if(!n)return'';return`<div class="ri"><span class="rn">${c.name}</span><span class="rv">${n} leads</span></div>`;}).filter(Boolean).join('')||`<span style="color:var(--text3);font-size:12px">${cold} leads frios — insere por treinamento para ver detalhe.</span>`
+    :'<span style="color:var(--text3);font-size:12px">Sem leads frios registados.</span>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// AI ASSISTANT — ANTHROPIC API
+// ══════════════════════════════════════════════════════════════
+function buildContext(){
+  const d=getCur(), desp=totalDesp(curPeriod), lucro=d.rev-desp;
+  const cs=DATA.courses||[];
+  const p=lsGet('ff3_profile_'+USER.email)||{};
+  const a1=CFG.a1!==''?CFG.a1:null, a2=CFG.a2!==''?CFG.a2:null, pros=CFG.pros!==''?CFG.pros:null;
+  const totalComm=(a1?Math.round(Math.max(0,lucro)*a1/100):0)+(a2?Math.round(Math.max(0,lucro)*a2/100):0)+(pros?Math.round(d.rev*pros/100):0);
+  const lucroLiq=Math.max(0,lucro)-totalComm;
+  return `És o assistente de crescimento do FormFlow. Tens acesso completo aos dados actuais do painel do utilizador e respondes com análise específica e acções concretas — nunca genéricas.
+
+CONTEXTO DO UTILIZADOR:
+- Instituição: ${p.institution||'N/A'} (${p.country||'Angola'})
+- Período a visualizar: ${curPeriod}
+- Treinamento seleccionado: ${getCurName()}
+
+TREINAMENTOS ACTIVOS:
+${cs.map(c=>`- ${c.name}: ticket ${c.ticket?fmt(c.ticket)+' Kz':'N/D'}, formato ${c.format}`).join('\n')}
+
+DADOS DO FUNIL AIDA (período: ${curPeriod}):
+- Atenção (mensagens): ${d.msgs}
+- Interesse (qualificados): ${d.qual} (${pct(d.qual,d.msgs)}% das mensagens)
+- Desejo (leads quentes): ${d.hot} (${pct(d.hot,d.qual)}% dos qualificados)
+- Acção (inscritos): ${d.insc} (${pct(d.insc,d.qual)}% dos qualificados)
+- Não confirmados: ${d.nc}
+- Leads frios (remarketing): ${d.cold}
+- Taxa de conversão geral (Atenção→Acção): ${pct(d.insc,d.msgs)}%
+
+FINANCEIRO:
+- Receita: ${fmt(d.rev)} Kz
+- Despesas: ${fmt(desp)} Kz
+- Lucro bruto: ${fmt(Math.max(0,lucro))} Kz
+- Total comissões: ${fmt(totalComm)} Kz
+- Lucro líquido (dono): ${fmt(lucroLiq)} Kz
+${CFG.meta!==''?`- Meta semanal: ${fmt(CFG.meta)} Kz (${pct(d.rev,CFG.meta)}% atingido)`:''}
+
+TENDÊNCIA (últimas 8 semanas — receita):
+${DATA.hist.rev.map((v,i)=>`S${i+1}: ${fmt(v)} Kz`).join(' | ')}
+
+COMISSÕES CONFIGURADAS:
+${a1!==null?`- Atendente 1: ${a1}% do lucro`:'- Atendente 1: não configurado'}
+${a2!==null?`- Atendente 2: ${a2}% do lucro`:'- Atendente 2: não configurado'}
+${pros!==null?`- Prospecção: ${pros}% da receita`:'- Prospecção: não configurada'}
+
+INSTRUÇÕES DE RESPOSTA:
+- Responde sempre em português (pt-PT)
+- Sê directo, concreto e específico aos dados acima
+- Dá sempre acções práticas e mensuráveis
+- Usa os números reais do utilizador nas respostas
+- Quando relevante, identifica o maior ponto de alavancagem nos dados
+- Formato: texto corrido, sem markdown excessivo, máximo 300 palavras salvo se pedido relatório completo`;
+}
+
+function addMsg(role, text){
+  const msgs=$('ia-msgs');
+  // Remove empty state
+  const empty=msgs.querySelector('.ia-empty');
+  if(empty) empty.remove();
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  div.innerHTML=`<div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div><div class="msg-time">${now()}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function addTyping(){
+  const msgs=$('ia-msgs');
+  const div=document.createElement('div');
+  div.className='msg ai'; div.id='ia-typing';
+  div.innerHTML=`<div class="typing"><span></span><span></span><span></span></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  return div;
+}
+
+async function sendIA(){
+  const inp=$('ia-input');
+  const text=inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  aiAsk(text);
+}
+
+async function aiAsk(question){
+  // Show user message
+  addMsg('user', question);
+  goTab('ia', document.querySelector('.ia-tab'));
+  // Disable send
+  const sendBtn=$('ia-send');
+  sendBtn.disabled=true; sendBtn.textContent='...';
+  // Add to history
+  iaHistory.push({role:'user',content:question});
+  // Show typing
+  const typingEl=addTyping();
+  try {
+    const systemPrompt=buildContext();
+    const messages=iaHistory.slice(-10); // keep last 10 for context
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:systemPrompt,
+        messages:messages
+      })
+    });
+    const data=await res.json();
+    typingEl.remove();
+    if(data.content&&data.content[0]){
+      const reply=data.content.map(b=>b.type==='text'?b.text:'').join('');
+      iaHistory.push({role:'assistant',content:reply});
+      addMsg('ai',reply);
+    } else {
+      throw new Error('Sem resposta da API');
+    }
+  } catch(e){
+    typingEl.remove();
+    addMsg('ai','Não consegui processar o pedido agora. Verifica a tua ligação à internet e tenta novamente.');
+    iaHistory.pop(); // remove failed user message from history
+    console.error('IA error:',e);
+  }
+  sendBtn.disabled=false; sendBtn.textContent='Enviar';
+  $('ia-msgs').scrollTop=$('ia-msgs').scrollHeight;
+}
+
+// ══════════════════════════════════════════════════════════════
+// QUICK REPORT
+// ══════════════════════════════════════════════════════════════
+function quickReport(){
+  const d=getCur(), desp=totalDesp(curPeriod), lucro=d.rev-desp;
+  const p=lsGet('ff3_profile_'+USER.email)||{};
+  const a1=CFG.a1!==''?CFG.a1:null, a2=CFG.a2!==''?CFG.a2:null, pros=CFG.pros!==''?CFG.pros:null;
+  const comms=[];
+  if(a1!==null) comms.push(`Atendente 1 (${a1}%): ${fmt(Math.round(Math.max(0,lucro)*a1/100))} Kz`);
+  if(a2!==null) comms.push(`Atendente 2 (${a2}%): ${fmt(Math.round(Math.max(0,lucro)*a2/100))} Kz`);
+  if(pros!==null) comms.push(`Prospecção (${pros}%): ${fmt(Math.round(d.rev*pros/100))} Kz`);
+  const msg=`RELATÓRIO ${curPeriod.toUpperCase()} — ${p.institution||'FormFlow'}\n\nReceita: ${fmt(d.rev)} Kz\nDespesas: ${fmt(desp)} Kz\nLucro: ${fmt(Math.max(0,lucro))} Kz\nInscritos: ${d.insc} | Qualificados: ${d.qual} | Frios: ${d.cold}\nConversão: ${pct(d.insc,d.msgs)}%${comms.length?'\n\nComissões:\n'+comms.join('\n'):''}`;
+  alert(msg);
+}
+
+// ══════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════
+function toast(msg){
+  const t=$('toast');
+  t.textContent=msg; t.classList.add('on');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
+if(!checkSession()) goScreen('auth');
+</script>
+</body>
+</html>
