@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090E">
+<meta name="description" content="Painel do Colaborador — FormFlow V5">
+<title>FormFlow Colaborador</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #09090E;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.08);
+  
+  --text-main: #F4F4F6;
+  --text-muted: #9CA3AF;
+  --text-dim: #6B7280;
+  
+  --accent: #7B6FFF;
+  --teal: #00E5A0;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --blue: #3B82F6;
+  
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  padding: 1.5rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 1000px; margin: 0 auto; }
+
+h1, h2, h3, .font-display { font-family: var(--font-display); }
+
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.logo-area { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--teal), var(--accent)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: #000; }
+.logo-text h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.logo-text span { font-size: 12px; color: var(--text-muted); }
+
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+
+.metric-card { padding: 1.25rem; border-left: 3px solid transparent; }
+.metric-card.teal { border-left-color: var(--teal); }
+.metric-card.accent { border-left-color: var(--accent); }
+.metric-card.amber { border-left-color: var(--amber); }
+
+.m-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.m-value { font-size: 28px; font-family: var(--font-display); font-weight: 600; line-height: 1.1; margin-bottom: 4px; }
+
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 500; }
+td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px; color: var(--text-main); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.b-hot { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+.b-warm { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+.b-cold { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+
+.form-control { width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-family: var(--font-body); font-size: 13px; outline: none; transition: 0.2s; }
+.form-control:focus { border-color: var(--teal); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; border-radius: var(--radius-sm); font-family: var(--font-display); font-weight: 500; font-size: 13px; cursor: pointer; transition: all 0.2s; border: none; }
+.btn-teal { background: var(--teal); color: #000; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 229, 160, 0.2); }
+.btn-teal:hover { opacity: 0.9; transform: translateY(-1px); }
+
+#toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+.toast { background: rgba(15, 15, 20, 0.95); border: 1px solid var(--border); padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.3s ease; border-left: 4px solid var(--teal); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="container" id="app" style="display:none;">
+  <header class="header">
+    <div class="logo-area">
+      <div class="logo-icon">FC</div>
+      <div class="logo-text">
+        <h1 class="font-display">Painel Colaborador</h1>
+        <span id="colab-name">Carregando...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid-3">
+    <div class="glass-panel metric-card amber">
+      <div class="m-title">Meus Leads Pendentes</div>
+      <div class="m-value" id="m-pendentes">0</div>
+    </div>
+    <div class="glass-panel metric-card accent">
+      <div class="m-title">Atendimentos Hoje</div>
+      <div class="m-value" id="m-contactados">0</div>
+    </div>
+    <div class="glass-panel metric-card teal">
+      <div class="m-title">Vendas Hoje</div>
+      <div class="m-value" id="m-convertidos">0</div>
+    </div>
+  </div>
+
+  <div class="glass-panel">
+    <h2 style="font-size: 18px; margin-bottom: 1.5rem;">Os Meus Leads</h2>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Lead / Contacto</th>
+            <th>Curso</th>
+            <th>Classificação</th>
+            <th>Status (Acção)</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <!-- Render via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="error-msg" style="display:none; text-align:center; padding: 4rem 1rem;">
+  <h2 class="font-display" style="color:var(--red); margin-bottom:1rem;">Acesso Negado</h2>
+  <p style="color:var(--text-muted);">Link de colaborador inválido ou conta não encontrada.</p>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const STORE_KEY = 'formflow_crm_v5';
+let DATA = null;
+let colabId = null;
+let colabData = null;
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerText = msg;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3500);
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORE_KEY);
+  if(raw) {
+    DATA = JSON.parse(raw);
+    return true;
+  }
+  return false;
+}
+
+function saveData() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+}
+
+function init() {
+  const params = new URLSearchParams(window.location.search);
+  colabId = params.get('colab');
+  
+  if(!colabId || !loadData()) {
+    document.getElementById('error-msg').style.display = 'block';
+    return;
+  }
+  
+  colabData = DATA.team.find(t => t.id === colabId);
+  if(!colabData) {
+    document.getElementById('error-msg').style.display = 'block';
+    return;
+  }
+  
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('colab-name').innerText = `Bem-vindo, ${colabData.name}`;
+  
+  updateUI();
+}
+
+function updateUI() {
+  const myLeads = DATA.leads.filter(l => l.handledBy === colabId);
+  
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isToday = (ts) => {
+    if(!ts) return false;
+    if(typeof ts === 'number') return new Date(ts).toISOString().startsWith(todayStr);
+    return String(ts).startsWith(todayStr);
+  };
+  
+  const pendentes = myLeads.filter(l => l.status === 'Novo').length;
+  const contactadosHoje = myLeads.filter(l => l.status !== 'Novo' && isToday(l.contactedAt)).length;
+  const vendasHoje = myLeads.filter(l => l.status === 'Convertido' && isToday(l.convertedAt)).length;
+  
+  document.getElementById('m-pendentes').innerText = pendentes;
+  document.getElementById('m-contactados').innerText = contactadosHoje;
+  document.getElementById('m-convertidos').innerText = vendasHoje;
+  
+  const tbody = document.getElementById('leads-tbody');
+  tbody.innerHTML = '';
+  
+  if(myLeads.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-dim);">Nenhum lead atribuído.</td></tr>`;
+    return;
+  }
+  
+  // Sort by Novo first, then priority
+  myLeads.sort((a,b) => {
+    if(a.status === 'Novo' && b.status !== 'Novo') return -1;
+    if(a.status !== 'Novo' && b.status === 'Novo') return 1;
+    const p = { 'Quente': 1, 'Morno': 2, 'Frio': 3 };
+    return p[a.classification] - p[b.classification];
+  });
+  
+  myLeads.forEach(l => {
+    let bClass = l.classification === 'Quente' ? 'b-hot' : l.classification === 'Morno' ? 'b-warm' : 'b-cold';
+    let icon = l.classification === 'Quente' ? '🔥' : l.classification === 'Morno' ? '⚡' : '❄️';
+    
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div style="font-weight: 500;">${l.name}</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">${l.phone || 'S/ Telemóvel'}</div>
+        </td>
+        <td>${l.course || '—'}</td>
+        <td>
+          <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadClass('${l.id}', this.value)">
+            <option value="Quente" ${l.classification==='Quente'?'selected':''}>🔥 Quente</option>
+            <option value="Morno" ${l.classification==='Morno'?'selected':''}>⚡ Morno</option>
+            <option value="Frio" ${l.classification==='Frio'?'selected':''}>❄️ Frio</option>
+          </select>
+        </td>
+        <td>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadStatus('${l.id}', this.value)">
+              <option value="Novo" ${l.status==='Novo'?'selected':''}>Novo</option>
+              <option value="Contactado" ${l.status==='Contactado'?'selected':''}>Contactado</option>
+              <option value="Convertido" ${l.status==='Convertido'?'selected':''}>Convertido (Venda)</option>
+            </select>
+            ${l.phone ? `<button class="btn btn-teal" style="padding: 6px 10px; font-size: 11px;" onclick="openWhatsApp('${l.id}', '${l.name}', '${l.phone}', '${l.course || ''}', '${l.classification}')">📱 WhatsApp</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function updateLeadStatus(id, newStatus) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead) {
+    lead.status = newStatus;
+    if(newStatus !== 'Novo') lead.contactedAt = new Date().toISOString();
+    if(newStatus === 'Convertido') lead.convertedAt = new Date().toISOString();
+    saveData();
+    showToast("Status atualizado!");
+    updateUI();
+  }
+}
+
+function updateLeadClass(id, newClass) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead) {
+    lead.classification = newClass;
+    
+    // CRM Intelligence update
+    if(newClass === 'Quente') {
+      lead.priority = 'Alta';
+      lead.action = 'Contacto imediato (Venda)';
+    } else if (newClass === 'Morno') {
+      lead.priority = 'Média';
+      lead.action = 'Remarketing + Follow-up';
+    } else {
+      lead.priority = 'Baixa';
+      lead.action = 'Nutrição (Sem urgência)';
+    }
+    
+    saveData();
+    showToast("Classificação atualizada!");
+    updateUI();
+  }
+}
+
+function openWhatsApp(id, name, phone, course, classification) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead && lead.status === 'Novo') {
+    lead.status = 'Contactado';
+    lead.contactedAt = new Date().toISOString();
+    saveData();
+    showToast("Status alterado para Contactado!");
+    setTimeout(updateUI, 500);
+  }
+  
+  let cleanPhone = phone.replace(/[^\d+]/g, '');
+  if(cleanPhone.startsWith('9')) cleanPhone = '+244' + cleanPhone;
+  
+  let msg = `Olá ${name}, sou o(a) ${colabData.name} da equipa técnica. `;
+  if(classification === 'Quente') {
+    msg += `Vi o teu interesse no treinamento ${course}. Estou aqui para ajudar na tua inscrição e tirar qualquer dúvida rápida!`;
+  } else {
+    msg += `Vi o teu interesse no treinamento ${course}. Gostaria de entender o teu momento atual.`;
+  }
+  
+  const url = `https://wa.me/${cleanPhone.replace('+','')}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+window.onload = init;
+</script>
+
+</body>
+</html>
