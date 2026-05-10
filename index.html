@@ -9,6 +9,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -557,41 +559,65 @@ window.addEventListener('unhandledrejection', function(event) {
 <div id="toast-container"></div>
 
 <script>
-// ── DATA MODEL ──
+// --- MOTOR E CONFIGURAÇÃO FIREBASE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyApqoCn_uGg3WirNn_9Uv7q1KxvVdlPLSw",
+  authDomain: "sac-formflow-dashboard-v5.firebaseapp.com",
+  projectId: "sac-formflow-dashboard-v5",
+  storageBucket: "sac-formflow-dashboard-v5.firebasestorage.app",
+  messagingSenderId: "520879763925",
+  appId: "1:520879763925:web:44c1e51b023f6f7cfb4d5c"
+};
+
+// Inicializa o Firebase apenas se ainda não foi inicializado
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
 const STORE_KEY = 'formflow_crm_v5';
 
 let DATA = {
-  courses: [
-    { id: 'c1', name: 'Método Versa', format: 'Presencial', price: 77000 },
-    { id: 'c2', name: 'Tráfego Pago Pro', format: 'Online', price: 50000 }
-  ],
   leads: [],
-  finances: {
-    ads: 0, room: 0, inet: 0, trans: 0, food: 0, other: 0, extraRev: 0
-  },
-  settings: {
-    syncInterval: 0, push: true, whatsapp: false, waNumber: '', email: false, emailAddress: ''
-  },
-  team: []
+  courses: [],
+  team: [],
+  finances: { ads: 0, room: 0, inet: 0, trans: 0, food: 0, other: 0, extraRev: 0 },
+  settings: { syncInterval: 0, push: true, whatsapp: false, waNumber: '', email: false, emailAddress: '' }
 };
-
-let classChart = null;
-let expChart = null;
-let contactChart = null;
 
 function loadData() {
   const raw = localStorage.getItem(STORE_KEY);
-  if(raw) DATA = { ...DATA, ...JSON.parse(raw) };
-  if(!DATA.finances || typeof DATA.finances.extraRev === 'undefined') {
-    DATA.finances = { ads: 0, room: 0, inet: 0, trans: 0, food: 0, other: 0, extraRev: 0 };
+  if(raw) {
+    const parsed = JSON.parse(raw);
+    DATA = { ...DATA, ...parsed };
+    if(parsed.finances) DATA.finances = { ...DATA.finances, ...parsed.finances };
+    if(parsed.settings) DATA.settings = { ...DATA.settings, ...parsed.settings };
   }
-  if(!DATA.settings) {
-    DATA.settings = { syncInterval: 0, push: true, whatsapp: false, waNumber: '', email: false, emailAddress: '' };
+  
+  if (typeof db !== 'undefined') {
+    db.collection("sistema").doc("master").onSnapshot((doc) => {
+      if(doc.exists) {
+        const cloudData = doc.data();
+        DATA = { ...DATA, ...cloudData };
+        if(cloudData.finances) DATA.finances = { ...DATA.finances, ...cloudData.finances };
+        if(cloudData.settings) DATA.settings = { ...DATA.settings, ...cloudData.settings };
+        if(!DATA.team) DATA.team = [];
+        
+        updateUI();
+        console.log("Sincronizado com o Google!");
+      }
+    }, (error) => {
+      console.log("Aguardando permissão do Firebase...");
+    });
   }
-  if(!DATA.team) DATA.team = [];
 }
+
 function saveData() {
   localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+  if (typeof db !== 'undefined') {
+    db.collection("sistema").doc("master").set(DATA)
+      .catch(e => console.error("Erro na nuvem:", e));
+  }
   updateUI();
 }
 function resetData() {
@@ -1456,8 +1482,9 @@ function renderTeam() {
     
     let taxa = contactsToday > 0 ? Math.round((salesToday / contactsToday) * 100) : 0;
     
-    // The magic link for the local prototype
-    const magicLink = `formflow_colab_v5.html?colab=${colab.id}`;
+    let baseUrl = window.location.href.split('?')[0];
+    baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
+    const magicLink = `${baseUrl}/formflow_colab_v5.html?colab=${colab.id}`;
     
     tbody.innerHTML += `
       <tr>
@@ -1494,21 +1521,6 @@ function addCollaboratorPrompt() {
 loadData();
 restoreAutomationSettings();
 updateUI();
-
-// Drag & Drop
-const dropzone = document.getElementById('csv-dropzone');
-dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
-dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; });
-dropzone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropzone.style.borderColor = 'var(--border)';
-  if(e.dataTransfer.files[0]) {
-    const r = new FileReader();
-    r.onload = evt => processLeadsCSV(evt.target.result);
-    r.readAsText(e.dataTransfer.files[0]);
-  }
-});
 </script>
-
 </body>
 </html>
