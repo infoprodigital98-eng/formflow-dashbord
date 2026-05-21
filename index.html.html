@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090E">
+<meta name="description" content="Dashboard Premium CRM — FormFlow V5">
+<title>FormFlow Premium CRM V5</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #09090E;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card-hover: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  
+  --text-main: #F4F4F6;
+  --text-muted: #9CA3AF;
+  --text-dim: #6B7280;
+  
+  --accent: #7B6FFF;
+  --teal: #00E5A0;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --blue: #3B82F6;
+  
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(123, 111, 255, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(0, 229, 160, 0.05), transparent 25%);
+  background-attachment: fixed;
+}
+
+.container { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ── Typography ── */
+h1, h2, h3, .font-display { font-family: var(--font-display); }
+.mono { font-family: var(--font-mono); }
+
+/* ── Glass Panel ── */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel:hover { border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  font-family: var(--font-display); font-weight: 500; font-size: 14px;
+  cursor: pointer; transition: all 0.2s; border: none;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent), #6050FF); color: white; box-shadow: 0 4px 15px rgba(123, 111, 255, 0.3); }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--border); }
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+.btn-teal { background: var(--teal); color: #000; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 229, 160, 0.2); }
+.btn-teal:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+.btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+/* ── Header & Tabs ── */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.logo-area { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--teal)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: white; box-shadow: 0 0 20px rgba(123, 111, 255, 0.4); }
+.logo-text h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.logo-text span { font-size: 12px; color: var(--text-muted); }
+
+.nav-tabs { display: flex; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px; gap: 4px; overflow-x: auto; }
+.tab-btn { padding: 8px 16px; border-radius: 10px; border: none; background: transparent; color: var(--text-muted); font-family: var(--font-display); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.tab-btn.active { background: var(--bg-card-hover); color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.tab-btn:hover:not(.active) { color: var(--text-main); }
+
+.tab-content { display: none; animation: fadeIn 0.4s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Grid & Metrics ── */
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+
+.metric-card { padding: 1.25rem; border-left: 3px solid transparent; }
+.metric-card.accent { border-left-color: var(--accent); }
+.metric-card.teal { border-left-color: var(--teal); }
+.metric-card.amber { border-left-color: var(--amber); }
+.metric-card.blue { border-left-color: var(--blue); }
+.m-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.m-value { font-size: 28px; font-family: var(--font-display); font-weight: 600; line-height: 1.1; margin-bottom: 4px; }
+.m-sub { font-size: 12px; color: var(--text-dim); }
+
+/* ── Tables & Lists ── */
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 500; }
+td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px; color: var(--text-main); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.b-hot { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+.b-warm { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+.b-cold { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+.b-teal { background: rgba(0, 229, 160, 0.15); color: var(--teal); border: 1px solid rgba(0, 229, 160, 0.3); }
+.b-gray { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+/* ── Forms ── */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.form-control { width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); font-family: var(--font-body); font-size: 14px; outline: none; transition: 0.2s; }
+.form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(123, 111, 255, 0.15); }
+
+/* ── Modal ── */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.active { display: flex; }
+.modal-content { background: #12121A; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 2rem; width: 100%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+/* ── Toasts ── */
+#toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+.toast { background: rgba(15, 15, 20, 0.95); border: 1px solid var(--border); padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.3s ease; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="admin-auth-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; padding: 2rem;">
+  <div class="glass-panel" style="max-width: 400px; width: 100%; text-align: center;">
+    <div style="font-size: 40px; margin-bottom: 1rem;">🔐</div>
+    <h2 id="auth-title" style="margin-bottom: 1rem; font-size: 24px;">A Ligar ao Firebase...</h2>
+    <p id="auth-desc" style="color:var(--text-muted); font-size:14px; margin-bottom: 1.5rem;">Por favor, aguarde enquanto sincronizamos os dados.</p>
+    
+    <div id="auth-form" style="display:none;">
+      <input type="password" id="auth-pass" class="form-control" placeholder="Introduza a sua senha" style="text-align:center; margin-bottom: 1rem; font-size: 16px; padding: 12px;" onkeypress="if(event.key === 'Enter') submitAdminAuth()">
+      <button class="btn btn-primary" style="width:100%; font-size: 16px; padding: 12px;" onclick="submitAdminAuth()">Aceder ao Painel</button>
+    </div>
+  </div>
+</div>
+
+<div class="container" id="app-container" style="display:none;">
+  
+  <header class="header">
+    <div class="logo-area">
+      <div class="logo-icon">FF</div>
+      <div class="logo-text">
+        <h1 class="font-display">FormFlow <span style="color:var(--teal)">CRM</span></h1>
+        <span>Gestão de Leads & Cursos</span>
+      </div>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('overview', this)">Visão Geral</button>
+      <button class="tab-btn" onclick="switchTab('finance', this)">Finanças & ROI</button>
+      <button class="tab-btn" onclick="switchTab('courses', this)">Cursos</button>
+      <button class="tab-btn" onclick="switchTab('pipeline', this)">Pipeline</button>
+      <button class="tab-btn" onclick="switchTab('import', this)">Importar</button>
+      <button class="tab-btn" onclick="switchTab('team', this)">Equipa</button>
+    </div>
+    
+    <div>
+      <button class="btn btn-secondary btn-danger" onclick="resetData()">Apagar Sistema</button>
+    </div>
+  </header>
+
+  <!-- TAB: VISÃO GERAL -->
+  <main id="tab-overview" class="tab-content active">
+    
+    <div class="grid-4">
+      <div class="glass-panel metric-card accent">
+        <div class="m-title">Total de Leads</div>
+        <div class="m-value" id="o-total">0</div>
+        <div class="m-sub">Leads importados</div>
+      </div>
+      <div class="glass-panel metric-card amber">
+        <div class="m-title">Leads Quentes</div>
+        <div class="m-value" id="o-hot">0</div>
+        <div class="m-sub">Prontos a comprar</div>
+      </div>
+      <div class="glass-panel metric-card teal">
+        <div class="m-title">Receita Realizada</div>
+        <div class="m-value" id="o-rev-real">0 Kz</div>
+        <div class="m-sub">Vendas fechadas</div>
+      </div>
+      <div class="glass-panel metric-card blue" style="background: linear-gradient(145deg, rgba(0, 229, 160, 0.05), rgba(255,255,255,0.02)); border-color: rgba(0, 229, 160, 0.2);">
+        <div class="m-title" style="color: var(--teal)">ROI (Retorno do Invest.)</div>
+        <div class="m-value" id="o-roi">0%</div>
+        <div class="m-sub" id="o-roi-sub">Análise de retorno</div>
+      </div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="glass-panel">
+        <h2 style="font-size: 16px; margin-bottom: 1.5rem;">Distribuição por Classificação</h2>
+        <div style="height: 250px; position: relative;">
+          <canvas id="chartClass"></canvas>
+        </div>
+      </div>
+      <div class="glass-panel">
+        <h2 style="font-size: 16px; margin-bottom: 1.5rem;">Top Cursos (Procura)</h2>
+        <div id="top-courses-list">
+          <p style="color: var(--text-dim); font-size: 13px;">A importar dados...</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TAXA DE CONTACTO E EQUIPA -->
+    <div class="grid-2" style="margin-bottom: 1.5rem;">
+      <div class="glass-panel">
+        <h2 style="font-size: 16px; margin-bottom: 1.5rem;">Taxa de Contacto (Equipa)</h2>
+        <div style="height: 200px; position: relative;">
+          <canvas id="chartContact"></canvas>
+        </div>
+      </div>
+      <div class="glass-panel">
+        <h2 style="font-size: 16px; margin-bottom: 1.5rem;">Últimos Contactados</h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 1rem;">Histórico em tempo real para evitar contactos duplicados pela equipa.</p>
+        <div id="recent-contacts-list" style="display: flex; flex-direction: column; gap: 10px;">
+          <p style="color: var(--text-dim); font-size: 13px;">A aguardar dados...</p>
+        </div>
+      </div>
+    </div>
+    <!-- AVALIAÇÃO DE DESEMPENHO -->
+    <div class="glass-panel" style="margin-top: 1.5rem; background: linear-gradient(145deg, rgba(123, 111, 255, 0.05), rgba(255,255,255,0.02)); border-color: rgba(123, 111, 255, 0.2);">
+      <h2 style="font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">🧠</span> Consultor AI (Desempenho)
+      </h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">Análise em tempo real baseada nos seus dados de conversão e finanças.</p>
+      
+      <div id="ai-insights" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Insights rendered via JS -->
+        <p style="color: var(--text-dim); font-size: 13px;">A aguardar dados...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB: FINANÇAS -->
+  <main id="tab-finance" class="tab-content">
+    
+    <div class="grid-4" style="margin-bottom: 1.5rem;">
+      <div class="glass-panel metric-card teal">
+        <div class="m-title">Receita Total</div>
+        <div class="m-value" id="fin-rev-total">0 Kz</div>
+        <div class="m-sub">Inscrições + Extras</div>
+      </div>
+      <div class="glass-panel metric-card red">
+        <div class="m-title">Despesa Total</div>
+        <div class="m-value" id="fin-exp-total">0 Kz</div>
+        <div class="m-sub">Custos operacionais</div>
+      </div>
+      <div class="glass-panel metric-card accent">
+        <div class="m-title">Lucro Líquido</div>
+        <div class="m-value" id="fin-profit">0 Kz</div>
+        <div class="m-sub">Resultado final</div>
+      </div>
+      <div class="glass-panel metric-card blue">
+        <div class="m-title">ROI Global</div>
+        <div class="m-value" id="fin-roi">0%</div>
+        <div class="m-sub">Retorno do investimento</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- RECEITAS -->
+      <div class="glass-panel">
+        <h2 style="font-size: 18px; margin-bottom: 8px;">Origem das Receitas</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">As receitas dos cursos são calculadas automaticamente com base nos leads marcados como "Convertido" no Pipeline.</p>
+        
+        <div id="finance-rev-list">
+          <!-- Injetado via JS -->
+        </div>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border);">
+          <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--teal);">Receitas Extras Manuais</h3>
+          <div class="form-group"><label>Outras Vendas / Patrocínios (Kz)</label><input type="number" id="f-rev-extra" class="form-control" placeholder="0"></div>
+          <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="saveDetailedExpenses()">Atualizar Finanças</button>
+        </div>
+      </div>
+      
+      <!-- DESPESAS -->
+      <div class="glass-panel">
+        <h2 style="font-size: 18px; margin-bottom: 8px;">Registo de Despesas Detalhadas</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">Introduza os custos operacionais. O sistema usa estes valores para deduzir na sua receita final.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group"><label>Tráfego / Anúncios</label><input type="number" id="f-ads" class="form-control" placeholder="0"></div>
+          <div class="form-group"><label>Aluguer de Sala</label><input type="number" id="f-room" class="form-control" placeholder="0"></div>
+          <div class="form-group"><label>Ferramentas / Internet</label><input type="number" id="f-inet" class="form-control" placeholder="0"></div>
+          <div class="form-group"><label>Transporte</label><input type="number" id="f-trans" class="form-control" placeholder="0"></div>
+          <div class="form-group"><label>Alimentação</label><input type="number" id="f-food" class="form-control" placeholder="0"></div>
+          <div class="form-group"><label>Comissões e Outros</label><input type="number" id="f-other" class="form-control" placeholder="0"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- GRAFICO -->
+    <div class="glass-panel" style="margin-top: 1.5rem;">
+        <h2 style="font-size: 18px; margin-bottom: 8px;">Distribuição de Custos vs Lucro</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">Entenda que fatia do seu faturamento foi para despesas operacionais.</p>
+        <div style="height: 250px; position: relative;">
+          <canvas id="chartExpenses"></canvas>
+        </div>
+    </div>
+  </main>
+
+  <!-- TAB: CURSOS -->
+  <main id="tab-courses" class="tab-content">
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="font-size: 18px;">Gestão de Cursos</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Defina os treinamentos para associar aos leads.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCourseModal()">+ Novo Curso</button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Treinamento</th>
+              <th>Formato</th>
+              <th>Preço (Kz)</th>
+              <th>Leads Associados</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="courses-tbody">
+            <!-- Render via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB: PIPELINE -->
+  <main id="tab-pipeline" class="tab-content">
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 style="font-size: 18px;">Pipeline de Vendas</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Acções recomendadas geradas automaticamente pelo sistema com base na classificação.</p>
+        </div>
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 12px; color: var(--text-dim);">Filtro:</span>
+          <select id="filter-class" class="form-control" style="width: auto; padding: 8px 12px;" onchange="renderPipeline()">
+            <option value="all">Todas as classificações</option>
+            <option value="quente">🔥 Quentes (Prioridade Alta)</option>
+            <option value="morno">⚡ Mornos (Prioridade Média)</option>
+            <option value="frio">❄️ Frios (Prioridade Baixa)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Contacto</th>
+              <th>Curso Requisitado</th>
+              <th>Classificação</th>
+              <th>Acção Automática</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="pipeline-tbody">
+            <!-- Render via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB: IMPORTAR -->
+  <main id="tab-import" class="tab-content">
+    <div class="grid-2">
+      
+      <!-- Sincronização Google Forms -->
+      <div class="glass-panel" style="background: linear-gradient(145deg, rgba(0, 229, 160, 0.05), rgba(123, 111, 255, 0.05)); border-color: rgba(0, 229, 160, 0.2);">
+        <h2 style="font-size: 18px; margin-bottom: 8px; color: var(--teal);">Sincronização com Google Forms</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">O sistema lê automaticamente o formulário, extrai nomes, contactos, curso e aplica a inteligência de prioridade (Alta/Média/Baixa) com base na coluna de classificação.</p>
+        
+        <div class="form-group">
+          <label>Link Público do CSV (Google Sheets)</label>
+          <input type="url" id="gs-url" class="form-control" value="https://docs.google.com/spreadsheets/d/1zCQ4gTjkS8Wro9g0gyabtMSeSBuvyOCCCmdcdSJ4icE/edit?usp=sharing">
+        </div>
+        <button class="btn btn-teal" style="width: 100%; margin-bottom: 1rem;" onclick="syncWithGoogleSheets()">Ler e Importar Leads via Link</button>
+        
+        <div style="text-align: center; margin: 1.5rem 0;">
+          <span style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">ou</span>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 8px; padding: 1.5rem; text-align: center;">
+          <h3 style="font-size: 14px; margin-bottom: 8px;">Alternativa Garantida (Sem falhas de link)</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 1rem;">Se o link do Google der erro de segurança, faça o download do CSV no Google Sheets (Ficheiro > Transferir > CSV) e envie-o por aqui.</p>
+          <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('csv-file-upload').click()">
+            📂 Fazer Upload de Arquivo CSV Manualmente
+          </button>
+          <input type="file" id="csv-file-upload" accept=".csv" style="display: none;" onchange="handleCSVFile(event)">
+        </div>
+      </div>
+
+      <!-- Importação CSV Tradicional -->
+      <div class="glass-panel">
+        <h2 style="font-size: 18px; margin-bottom: 8px;">Importar Ficheiro CSV</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">Se possuir um ficheiro Excel/CSV com as colunas (Nome, Email, Telefone, Curso, Classificação), pode carregar aqui.</p>
+        
+        <div style="border: 2px dashed var(--border); padding: 2rem; border-radius: var(--radius-md); text-align: center; cursor: pointer; transition: 0.2s;" onclick="document.getElementById('csv-file').click()" id="csv-dropzone">
+          <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+          <div style="font-weight: 500; margin-bottom: 4px;">Clique para escolher um CSV</div>
+          <div style="font-size: 12px; color: var(--text-dim);">ou arraste para aqui</div>
+        </div>
+        <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleCSVFile(event)">
+      </div>
+      
+      <!-- Automação & Notificações -->
+      <div class="glass-panel" style="grid-column: 1 / -1; margin-top: 1.5rem; border-color: rgba(0, 229, 160, 0.3);">
+        <h2 style="font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🤖</span> Automação & Notificações
+        </h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">Configure o robô para verificar novos leads no Google Sheets e alertá-lo automaticamente (mesmo com a janela minimizada).</p>
+        
+        <div class="grid-2">
+          <div>
+            <div class="form-group">
+              <label>Sincronização em Segundo Plano</label>
+              <select id="auto-sync-interval" class="form-control" onchange="toggleAutoSync(); saveAutomationSettings()">
+                <option value="0">Desativado (Sincronização Manual)</option>
+                <option value="5">Verificar a cada 5 Minutos</option>
+                <option value="10">Verificar a cada 10 Minutos</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="form-group">
+              <label>Canais de Notificação (Alertas)</label>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="notif-push" checked onchange="requestPushPermission(); saveAutomationSettings()"> Push Desktop (Navegador)
+                </label>
+                
+                <div style="margin-top: 4px;">
+                  <label style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="notif-whatsapp" onchange="toggleNotifInputs(); saveAutomationSettings()"> Alerta por WhatsApp
+                  </label>
+                  <input type="text" id="notif-whatsapp-number" class="form-control" style="display: none; margin-top: 4px; padding: 4px 8px; font-size: 12px; width: 100%; border: 1px solid rgba(0, 229, 160, 0.4);" placeholder="Ex: 244933000528" oninput="saveAutomationSettings()">
+                </div>
+                
+                <div style="margin-top: 4px;">
+                  <label style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="notif-email" onchange="toggleNotifInputs(); saveAutomationSettings()"> Alerta por Email
+                  </label>
+                  <input type="email" id="notif-email-address" class="form-control" style="display: none; margin-top: 4px; padding: 4px 8px; font-size: 12px; width: 100%; border: 1px solid rgba(0, 229, 160, 0.4);" placeholder="Ex: infoprodigital98@gmail.com" oninput="saveAutomationSettings()">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- TAB: EQUIPA -->
+  <main id="tab-team" class="tab-content">
+    <div class="header">
+      <div>
+        <h2 style="font-size: 18px;">Monitorização da Equipa</h2>
+        <p style="font-size: 13px; color: var(--text-muted);">Acompanhe o número de atendimentos e conversões diárias de cada colaborador.</p>
+      </div>
+      <button class="btn btn-primary" onclick="addCollaboratorPrompt()">+ Novo Colaborador</button>
+    </div>
+    
+    <div class="glass-panel" style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Colaborador</th>
+            <th>WhatsApp</th>
+            <th>Atendimentos (Hoje)</th>
+            <th>Conversões (Hoje)</th>
+            <th>Taxa de Fecho</th>
+            <th>Link de Acesso (Painel do Colaborador)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="team-tbody">
+          <!-- JS Render -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+</div>
+
+<!-- Modal: Adicionar Curso -->
+<div class="modal-overlay" id="modal-course">
+  <div class="modal-content">
+    <h2 style="margin-bottom: 1.5rem;" id="modal-course-title">Novo Curso</h2>
+    <input type="hidden" id="c-id">
+    
+    <div class="form-group">
+      <label>Nome do Treinamento</label>
+      <input type="text" id="c-name" class="form-control" placeholder="Ex: Método Versa">
+    </div>
+    <div class="form-group">
+      <label>Formato</label>
+      <select id="c-format" class="form-control" onchange="toggleCoursePrices()">
+        <option value="Online">Online</option>
+        <option value="Presencial">Presencial</option>
+        <option value="Híbrido">Híbrido</option>
+      </select>
+    </div>
+    <div class="form-group" id="c-group-online">
+      <label>Preço Online (Kz)</label>
+      <input type="number" id="c-price-online" class="form-control" placeholder="Ex: 50000">
+    </div>
+    <div class="form-group" id="c-group-presencial" style="display: none;">
+      <label>Preço Presencial (Kz)</label>
+      <input type="number" id="c-price-presencial" class="form-control" placeholder="Ex: 77000">
+    </div>
+    
+    <div style="display: flex; gap: 10px; margin-top: 2rem;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveCourse()">Guardar</button>
+      <button class="btn btn-secondary" style="flex: 1;" onclick="closeCourseModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+
+const STORE_KEY = 'formflow_crm_v5';
+let classChart = null;
+let contactChart = null;
+let expChart = null;
+
+// O objeto DATA deve manter a estrutura original para não quebrar os cálculos
+let DATA = {
+  leads: [],
+  courses: [], // Mantido para compatibilidade com a aba Cursos
+  finances: { ads: 0, room: 0, inet: 0, trans: 0, food: 0, other: 0, extraRev: 0 },
+  settings: { syncInterval: 0, push: true, whatsapp: false, waNumber: '', email: false, emailAddress: '' },
+  team: []
+};
+
+// 1. REPARAÇÃO DA LEITURA (Resolve o Dashboard não atualizar)
+function loadData() {
+  console.log("Ligando escuta em tempo real com Firebase...");
+  
+  if (typeof window.db === 'undefined' || !window.db) return;
+  // onSnapshot garante que se o dado mudou no Firebase, ele muda no ecrã na hora
+  window.db.collection("sistema").doc("master").onSnapshot((doc) => {
+    if (doc.exists) {
+      const remote = doc.data();
+      
+      // Atualiza o objeto global DATA com os dados da nuvem
+      DATA.leads = remote.leads || [];
+      DATA.finances = remote.finances || DATA.finances;
+      DATA.team = remote.team || [];
+      DATA.courses = remote.courses || [];
+      
+      // Protege as configurações de Notificação (WhatsApp/Email) e Senhas
+      DATA.settings = { ...DATA.settings, ...remote.settings };
+
+      console.log("Sincronização concluída: " + DATA.leads.length + " leads carregados.");
+      
+      if (typeof restoreAutomationSettings === 'function') restoreAutomationSettings();
+      
+      // Sistema de Autenticação
+      checkAdminAuth();
+      if (isAdminAuthenticated) {
+        if (typeof updateUI === 'function') updateUI();
+      }
+    } else {
+      console.warn("Documento 'master' não encontrado. Criando base...");
+      saveData();
+    }
+  }, (error) => {
+    console.error("Erro crítico na leitura do Firebase:", error);
+  });
+}
+
+// 2. REPARAÇÃO DA GRAVAÇÃO
+function saveData() {
+  if (typeof window.db === 'undefined' || !window.db) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+      return;
+  }
+  
+  // Clean the DATA object to remove any 'undefined' values that cause Firestore to silently fail/reject the write
+  const cleanData = JSON.parse(JSON.stringify(DATA));
+
+  window.db.collection("sistema").doc("master").set(cleanData)
+    .then(() => {
+      console.log("Dados salvos no Firebase com sucesso.");
+      localStorage.setItem(STORE_KEY, JSON.stringify(cleanData));
+    })
+    .catch(err => console.error("Erro ao salvar no Firebase:", err));
+}
+
+// ── AUTHENTICATION SYSTEM ──
+let isAdminAuthenticated = false;
+
+async function hashPassword(msg) {
+  const msgBuffer = new TextEncoder().encode(msg);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function checkAdminAuth() {
+  if (isAdminAuthenticated) return;
+  
+  const title = document.getElementById('auth-title');
+  const desc = document.getElementById('auth-desc');
+  const form = document.getElementById('auth-form');
+  const passInput = document.getElementById('auth-pass');
+  
+  if (!DATA.settings.adminPassword) {
+    title.innerText = "Criar Senha Mestra";
+    desc.innerText = "Este é o seu primeiro acesso. Defina uma senha segura para proteger o seu CRM.";
+    passInput.placeholder = "Nova Senha Mestra";
+  } else {
+    title.innerText = "Painel Premium";
+    desc.innerText = "Introduza a sua Senha Mestra para continuar.";
+    passInput.placeholder = "Senha Mestra";
+  }
+  form.style.display = 'block';
+  passInput.focus();
+}
+
+async function submitAdminAuth() {
+  const pass = document.getElementById('auth-pass').value;
+  if (!pass) return showToast("A senha não pode estar vazia.", "red");
+  
+  const hash = await hashPassword(pass);
+  
+  if (!DATA.settings.adminPassword) {
+    DATA.settings.adminPassword = hash;
+    saveData();
+    showToast("Senha Mestra criada com sucesso!", "teal");
+    unlockApp();
+  } else {
+    if (DATA.settings.adminPassword === hash) {
+      showToast("Acesso concedido!", "teal");
+      unlockApp();
+    } else {
+      showToast("Senha incorreta.", "red");
+      document.getElementById('auth-pass').value = '';
+    }
+  }
+}
+
+function unlockApp() {
+  isAdminAuthenticated = true;
+  document.getElementById('admin-auth-overlay').style.display = 'none';
+  document.getElementById('app-container').style.display = 'block';
+  updateUI();
+}
+
+function resetData() {
+  if(confirm("Deseja apagar TUDO? Cursos e Leads serão removidos.")) {
+    localStorage.removeItem(STORE_KEY);
+    location.reload();
+  }
+}
+
+function getTotalExpenses() {
+  const f = DATA.finances;
+  return (f.ads||0) + (f.room||0) + (f.inet||0) + (f.trans||0) + (f.food||0) + (f.other||0);
+}
+
+function saveDetailedExpenses() {
+  DATA.finances = {
+    extraRev: parseFloat(document.getElementById('f-rev-extra').value) || 0,
+    ads: parseFloat(document.getElementById('f-ads').value) || 0,
+    room: parseFloat(document.getElementById('f-room').value) || 0,
+    inet: parseFloat(document.getElementById('f-inet').value) || 0,
+    trans: parseFloat(document.getElementById('f-trans').value) || 0,
+    food: parseFloat(document.getElementById('f-food').value) || 0,
+    other: parseFloat(document.getElementById('f-other').value) || 0
+  };
+  saveData();
+  showToast("Dados financeiros atualizados!", "teal");
+}
+
+// ── UI NAVIGATION ──
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+  if(tabId === 'overview') updateOverview();
+  if(tabId === 'finance') updateFinances();
+  if(tabId === 'team') renderTeam();
+}
+
+function showToast(msg, colorType = 'accent') {
+  const colors = { accent: 'var(--accent)', teal: 'var(--teal)', amber: 'var(--amber)', red: 'var(--red)' };
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.borderLeft = `4px solid ${colors[colorType]}`;
+  toast.innerText = msg;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3500);
+}
+
+// ── COURSES LOGIC ──
+function toggleCoursePrices() {
+  const f = document.getElementById('c-format').value;
+  document.getElementById('c-group-online').style.display = (f === 'Online' || f === 'Híbrido') ? 'block' : 'none';
+  document.getElementById('c-group-presencial').style.display = (f === 'Presencial' || f === 'Híbrido') ? 'block' : 'none';
+}
+
+function openCourseModal(id = null) {
+  document.getElementById('modal-course').classList.add('active');
+  if(id) {
+    const c = DATA.courses.find(x => x.id === id);
+    document.getElementById('modal-course-title').innerText = "Editar Curso";
+    document.getElementById('c-id').value = c.id;
+    document.getElementById('c-name').value = c.name;
+    document.getElementById('c-format').value = c.format || 'Online';
+    
+    let po = c.priceOnline || (c.format !== 'Presencial' ? c.price : 0) || 0;
+    let pp = c.pricePresencial || (c.format === 'Presencial' ? c.price : 0) || 0;
+    
+    document.getElementById('c-price-online').value = po || '';
+    document.getElementById('c-price-presencial').value = pp || '';
+  } else {
+    document.getElementById('modal-course-title').innerText = "Novo Curso";
+    document.getElementById('c-id').value = '';
+    document.getElementById('c-name').value = '';
+    document.getElementById('c-format').value = 'Online';
+    document.getElementById('c-price-online').value = '';
+    document.getElementById('c-price-presencial').value = '';
+  }
+  toggleCoursePrices();
+}
+
+function closeCourseModal() { document.getElementById('modal-course').classList.remove('active'); }
+
+function saveCourse() {
+  const id = document.getElementById('c-id').value;
+  const name = document.getElementById('c-name').value.trim();
+  const format = document.getElementById('c-format').value;
+  const priceOnline = parseFloat(document.getElementById('c-price-online').value) || 0;
+  const pricePresencial = parseFloat(document.getElementById('c-price-presencial').value) || 0;
+  
+  let price = format === 'Presencial' ? pricePresencial : priceOnline;
+  
+  if(!name) return showToast("O nome é obrigatório", "red");
+  
+  if(id) {
+    const idx = DATA.courses.findIndex(x => x.id === id);
+    DATA.courses[idx] = { ...DATA.courses[idx], id, name, format, priceOnline, pricePresencial, price };
+  } else {
+    DATA.courses.push({ id: 'crs_' + Date.now(), name, format, priceOnline, pricePresencial, price });
+  }
+  
+  closeCourseModal();
+  saveData();
+  showToast("Curso guardado!", "teal");
+}
+
+function deleteCourse(id) {
+  if(confirm("Remover este curso?")) {
+    DATA.courses = DATA.courses.filter(x => x.id !== id);
+    saveData();
+  }
+}
+
+function renderCourses() {
+  const tbody = document.getElementById('courses-tbody');
+  tbody.innerHTML = '';
+  
+  if(DATA.courses.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-dim);">Nenhum curso cadastrado.</td></tr>`;
+    return;
+  }
+  
+  DATA.courses.forEach(c => {
+    // Count leads for this course
+    const leadsCount = DATA.leads.filter(l => l.course.toLowerCase() === c.name.toLowerCase()).length;
+    
+    let priceStr = '';
+    if(c.format === 'Híbrido') {
+      priceStr = `Online: ${new Intl.NumberFormat('pt-PT').format(c.priceOnline || c.price)}<br>Pres: ${new Intl.NumberFormat('pt-PT').format(c.pricePresencial || c.price)}`;
+    } else {
+      let p = c.format === 'Presencial' ? (c.pricePresencial || c.price) : (c.priceOnline || c.price);
+      priceStr = new Intl.NumberFormat('pt-PT').format(p);
+    }
+    
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-weight: 500;">${c.name}</td>
+        <td><span class="badge b-gray">${c.format}</span></td>
+        <td class="mono" style="font-size:12px;">${priceStr}</td>
+        <td>${leadsCount} leads</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="openCourseModal('${c.id}')">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCourse('${c.id}')">Remover</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+let autoSyncTimer = null;
+
+function requestPushPermission() {
+  const cb = document.getElementById('notif-push');
+  if(cb && cb.checked) {
+    if (!("Notification" in window)) {
+      showToast("Navegador não suporta notificações Push.", "red");
+      cb.checked = false;
+    } else if (Notification.permission !== "granted") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification("Automação Ativa", { body: "O Dashboard vai alertá-lo sobre novos leads!" });
+        } else {
+          cb.checked = false;
+          showToast("Permissão para notificações negada.", "amber");
+        }
+      });
+    }
+  }
+}
+
+function toggleAutoSync() {
+  const val = parseInt(document.getElementById('auto-sync-interval').value);
+  if(autoSyncTimer) clearInterval(autoSyncTimer);
+  
+  if(val > 0) {
+    const ms = val * 60 * 1000;
+    autoSyncTimer = setInterval(() => syncWithGoogleSheets(true), ms);
+    showToast(`Automação ativada: verificar a cada ${val} minutos.`, "teal");
+    requestPushPermission();
+  } else {
+    showToast("Automação em segundo plano desativada.", "amber");
+  }
+}
+
+function triggerDesktopNotification(title, body) {
+  const pushEnabled = document.getElementById('notif-push') && document.getElementById('notif-push').checked;
+  if(pushEnabled && "Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body: body });
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play();
+    } catch(e) {}
+  }
+}
+
+function toggleNotifInputs() {
+  const waChecked = document.getElementById('notif-whatsapp').checked;
+  const emailChecked = document.getElementById('notif-email').checked;
+  
+  document.getElementById('notif-whatsapp-number').style.display = waChecked ? 'block' : 'none';
+  document.getElementById('notif-email-address').style.display = emailChecked ? 'block' : 'none';
+}
+
+function saveAutomationSettings() {
+  DATA.settings = {
+    syncInterval: parseInt(document.getElementById('auto-sync-interval').value) || 0,
+    push: document.getElementById('notif-push').checked,
+    whatsapp: document.getElementById('notif-whatsapp').checked,
+    waNumber: document.getElementById('notif-whatsapp-number').value,
+    email: document.getElementById('notif-email').checked,
+    emailAddress: document.getElementById('notif-email-address').value
+  };
+  saveData();
+}
+
+function restoreAutomationSettings() {
+  if(!DATA.settings) return;
+  document.getElementById('auto-sync-interval').value = DATA.settings.syncInterval || 0;
+  document.getElementById('notif-push').checked = DATA.settings.push !== false;
+  document.getElementById('notif-whatsapp').checked = DATA.settings.whatsapp || false;
+  document.getElementById('notif-whatsapp-number').value = DATA.settings.waNumber || '';
+  document.getElementById('notif-email').checked = DATA.settings.email || false;
+  document.getElementById('notif-email-address').value = DATA.settings.emailAddress || '';
+  
+  toggleNotifInputs();
+  
+  const val = DATA.settings.syncInterval;
+  if(val > 0) {
+    if(autoSyncTimer) clearInterval(autoSyncTimer);
+    autoSyncTimer = setInterval(() => syncWithGoogleSheets(true), val * 60 * 1000);
+  }
+}
+
+function dispatchExternalNotifications(name, course) {
+  const waChecked = document.getElementById('notif-whatsapp').checked;
+  const emailChecked = document.getElementById('notif-email').checked;
+  
+  if(waChecked) {
+    const num = document.getElementById('notif-whatsapp-number').value;
+    if(num) {
+      setTimeout(() => showToast(`📲 [Simulação] Notificação WhatsApp enviada para ${num}`, "teal"), 800);
+    } else {
+      setTimeout(() => showToast(`Aviso: Número de WhatsApp não configurado na aba Importar.`, "amber"), 800);
+    }
+  }
+  
+  if(emailChecked) {
+    const email = document.getElementById('notif-email-address').value;
+    if(email) {
+      setTimeout(() => showToast(`📧 [Simulação] Email de alerta enviado para ${email}`, "teal"), 1500);
+    } else {
+      setTimeout(() => showToast(`Aviso: Email não configurado na aba Importar.`, "amber"), 1500);
+    }
+  }
+}
+
+// ── IMPORT LOGIC (The Core CRM Engine) ──
+// 3. REPARAÇÃO DO BOTÃO E SYNC AUTOMÁTICO (Resolve Ponto 1 e 2)
+async function syncWithGoogleSheets(silent = false) {
+  let sheetUrl = document.getElementById('gs-url') ? document.getElementById('gs-url').value.trim() : '';
+  
+  // Transform standard share link to CSV export link
+  if (sheetUrl.includes('/edit')) {
+    sheetUrl = sheetUrl.replace(/\/edit.*$/, '/export?format=csv');
+  } else if (!sheetUrl) {
+    // Fallback if empty
+    sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUUDgtUOMmleG9En5WpxyOZrrflt2GUQDgwqVE-6aMBLYLbQv6i5N5y7bC5SajqSjHPzt8UJUqbZ8a/pub?gid=734060596&single=true&output=csv';
+  }
+  
+  if (!silent) showToast("Sincronizando com Google Sheets...", "blue");
+
+  try {
+    const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(sheetUrl);
+    const response = await fetch(proxyUrl);
+    const csvText = await response.text();
+    
+    if (csvText.trim().startsWith('<')) {
+      console.error("A resposta não é um CSV válido:", csvText.substring(0, 100));
+      if (!silent) showToast("Erro: O link devolveu HTML. O Google Sheets tem de estar partilhado/público.", "red");
+      return;
+    }
+    
+    // Use the smart CSV parser that already knows how to map columns and classify leads
+    processLeadsCSV(csvText, silent);
+  } catch (error) {
+    console.error("Falha na sincronização:", error);
+    if (!silent) showToast("Erro ao conectar ao Google Sheets", "red");
+  }
+}
+
+function handleCSVFile(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => processLeadsCSV(evt.target.result, false);
+  reader.readAsText(file);
+}
+
+function processLeadsCSV(csvText, silent = false) {
+  Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      let imported = 0;
+      
+      results.data.forEach(row => {
+        // Smart matching for column names
+        const getCol = (...keys) => {
+          for(let k of keys) {
+            const match = Object.keys(row).find(x => x.toLowerCase().includes(k.toLowerCase()));
+            if(match && row[match].trim() !== '') return row[match].trim();
+          }
+          return '';
+        };
+        
+        const name = getCol('nome', 'name');
+        if(!name) return; // Skip empty rows
+        
+        const email = getCol('email', 'e-mail', 'correio');
+        const phone = getCol('telefone', 'telemóvel', 'phone', 'contato', 'contacto');
+        const course = getCol('curso', 'treinamento', 'formação', 'selecione', 'indicado');
+        const classif_raw = getCol('classifica', 'lead', 'tipo', 'prontidão', 'nivel').toLowerCase();
+        
+        // CRM INTELLIGENCE: Classification -> Priority & Action
+        let classification = 'Frio';
+        let priority = 'Baixa';
+        let action = 'Nutrição (Sem urgência)';
+        
+        if(classif_raw.includes('quente') || classif_raw.includes('hot')) {
+          classification = 'Quente';
+          priority = 'Alta';
+          action = 'Contacto imediato (Venda)';
+        } 
+        else if (classif_raw.includes('morno') || classif_raw.includes('warm')) {
+          classification = 'Morno';
+          priority = 'Média';
+          action = 'Remarketing + Follow-up';
+        }
+        
+        // Check if lead already exists to avoid exact duplicates
+        const exists = DATA.leads.find(l => 
+          (email && l.email === email) || 
+          (phone && phone.length > 5 && l.phone === phone) ||
+          (!email && !phone && l.name === name) // Fallback for name only leads
+        );
+        if(exists) return; 
+        
+        DATA.leads.push({
+          id: 'ld_' + Date.now() + Math.random().toString(16).slice(2),
+          name, email, phone, course, 
+          classification, priority, 
+          status: 'Novo', action,
+          addedAt: new Date().toISOString()
+        });
+        
+        if(silent) {
+          triggerDesktopNotification("🚨 Novo Lead Chegou!", `${name} tem interesse em ${course || 'um curso'}.`);
+        }
+        
+        // Always dispatch external notifications (Email/WhatsApp) when a new lead is detected, even if manual import
+        dispatchExternalNotifications(name, course);
+        
+        // Auto-register course if it doesn't exist
+        if(course) {
+          const courseExists = DATA.courses.find(c => c.name.toLowerCase() === course.toLowerCase());
+          if(!courseExists) {
+            DATA.courses.push({ id: 'crs_'+Date.now()+imported, name: course, format: 'Desconhecido', price: 0 });
+          }
+        }
+        
+        imported++;
+      });
+      saveData();
+      updateUI();
+      if(!silent && imported > 0) {
+        showToast(`${imported} novos leads importados e classificados!`, "teal");
+      } else if (!silent && imported === 0) {
+        showToast(`Sincronização concluída. Nenhum lead novo encontrado.`, "amber");
+      }
+    }
+  });
+}
+
+// ── PIPELINE LOGIC ──
+function renderPipeline() {
+  const tbody = document.getElementById('pipeline-tbody');
+  const filter = document.getElementById('filter-class').value;
+  tbody.innerHTML = '';
+  
+  let leads = DATA.leads;
+  if(filter !== 'all') {
+    leads = leads.filter(l => l.classification.toLowerCase() === filter);
+  }
+  
+  // Sort by priority (Quente -> Morno -> Frio)
+  leads.sort((a,b) => {
+    const p = { 'Quente': 1, 'Morno': 2, 'Frio': 3 };
+    return p[a.classification] - p[b.classification];
+  });
+  
+  if(leads.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-dim);">Nenhum lead encontrado nesta vista.</td></tr>`;
+    return;
+  }
+  
+  leads.forEach(l => {
+    let bClass = l.classification === 'Quente' ? 'b-hot' : l.classification === 'Morno' ? 'b-warm' : 'b-cold';
+    let icon = l.classification === 'Quente' ? '🔥' : l.classification === 'Morno' ? '⚡' : '❄️';
+    
+    let formatSel = '';
+    const c = DATA.courses.find(x => x.name.toLowerCase() === (l.course || '').toLowerCase());
+    if(c && c.format === 'Híbrido') {
+      const sel = l.leadFormat || 'Online';
+      formatSel = `<select class="form-control" style="padding: 2px 4px; font-size: 10px; margin-top: 4px;" onchange="updateLeadFormat('${l.id}', this.value)">
+        <option value="Online" ${sel==='Online'?'selected':''}>Online</option>
+        <option value="Presencial" ${sel==='Presencial'?'selected':''}>Presencial</option>
+      </select>`;
+    }
+    
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div style="font-weight: 500;">${l.name}</div>
+        </td>
+        <td>
+          <div style="font-size: 11px; color: var(--text-muted);">${l.email || 'S/ Email'}</div>
+          <div style="font-size: 12px;" class="mono">${l.phone || 'S/ Telemóvel'}</div>
+        </td>
+        <td>
+          ${l.course || '—'}
+          ${formatSel}
+        </td>
+        <td><span class="badge ${bClass}">${icon} ${l.classification}</span></td>
+        <td style="font-size: 12px;"><strong>Prioridade ${l.priority}:</strong><br/><span style="color:var(--text-muted)">${l.action}</span></td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadStatus('${l.id}', this.value)">
+              <option value="Novo" ${l.status==='Novo'?'selected':''}>Novo</option>
+              <option value="Contactado" ${l.status==='Contactado'?'selected':''}>Contactado</option>
+              <option value="Convertido" ${l.status==='Convertido'?'selected':''}>Convertido (Venda)</option>
+            </select>
+            <select class="form-control" style="padding: 4px; font-size: 11px; width: auto; border-color: rgba(123, 111, 255, 0.4);" onchange="updateLeadColab('${l.id}', this.value)">
+              <option value="">👤 Atribuir a...</option>
+              ${DATA.team.map(colab => `<option value="${colab.id}" ${l.handledBy === colab.id ? 'selected' : ''}>${colab.name}</option>`).join('')}
+            </select>
+            ${l.phone ? `<button class="btn btn-teal btn-sm" style="font-size:10px; padding: 4px 8px; background: #25D366; color: #000; border: none; box-shadow: 0 2px 10px rgba(37, 211, 102, 0.2);" onclick="openWhatsApp('${l.id}', '${l.name}', '${l.phone}', '${l.course || ''}', '${l.classification}')">📱 WhatsApp</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function updateLeadStatus(id, newStatus) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead) {
+    lead.status = newStatus;
+    if(newStatus !== 'Novo') lead.contactedAt = new Date().toISOString();
+    if(newStatus === 'Convertido') lead.convertedAt = new Date().toISOString();
+    saveData();
+    showToast("Status atualizado!", "teal");
+    updateOverview();
+  }
+}
+
+function updateLeadColab(id, colabId) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead) {
+    lead.handledBy = colabId;
+    saveData();
+    showToast("Colaborador atribuído!", "teal");
+  }
+}
+
+function updateLeadFormat(id, newFormat) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead) {
+    lead.leadFormat = newFormat;
+    saveData();
+    showToast("Formato do lead atualizado!", "teal");
+  }
+}
+
+function getLeadPrice(l, c) {
+  if(!c) return 0;
+  if(c.format === 'Híbrido') {
+    return (l.leadFormat === 'Presencial') ? (c.pricePresencial || c.price || 0) : (c.priceOnline || c.price || 0);
+  }
+  return c.format === 'Presencial' ? (c.pricePresencial || c.price || 0) : (c.priceOnline || c.price || 0);
+}
+
+function openWhatsApp(id, name, phone, course, classification) {
+  // Auto-update status to Contactado to avoid team collisions
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead && lead.status === 'Novo') {
+    lead.status = 'Contactado';
+    lead.contactedAt = new Date().toISOString();
+    saveData();
+    showToast("Status alterado para Contactado!", "teal");
+    setTimeout(updateUI, 500); // refresh UI after opening URL
+  }
+  
+  let cleanPhone = phone.replace(/[^\d+]/g, '');
+  if(cleanPhone.startsWith('9')) cleanPhone = '+244' + cleanPhone;
+  
+  let msg = `Olá ${name}, `;
+  if(classification === 'Quente') {
+    msg += `vi o teu interesse imediato no treinamento ${course}. O meu nome é da equipa técnica, estou aqui para ajudar na tua inscrição e tirar qualquer dúvida rápida.`;
+  } else if (classification === 'Morno') {
+    msg += `notei o teu interesse em melhorar os teus resultados com o ${course}. Gostaria de entender o teu momento atual e enviar-te um material ou oportunidade.`;
+  } else {
+    msg += `obrigado por mostrar interesse no nosso trabalho sobre ${course}. Estamos a construir uma comunidade forte e adorávamos manter o contacto!`;
+  }
+  
+  const url = `https://wa.me/${cleanPhone.replace('+','')}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function sendColabWhatsApp(name, phone, link, isSetup) {
+  let cleanPhone = phone.replace(/[^\d+]/g, '');
+  if(cleanPhone.startsWith('9')) cleanPhone = '+244' + cleanPhone;
+  
+  let msg = '';
+  if (isSetup) {
+    msg = `Olá ${name}, a tua conta de colaborador no FormFlow foi criada! Acede a este link para definires a tua senha de acesso:\n${link}`;
+  } else {
+    msg = `Olá ${name}, aqui tens o link de acesso ao painel FormFlow:\n${link}\nUsa o teu número e a senha que definiste para entrares.`;
+  }
+  
+  const url = `https://wa.me/${cleanPhone.replace('+','')}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+// ── OVERVIEW LOGIC ──
+function updateOverview() {
+  const leads = DATA.leads;
+  
+  const total = leads.length;
+  const hots = leads.filter(l => l.classification === 'Quente').length;
+  const conversions = leads.filter(l => l.status === 'Convertido').length;
+  
+  // Calculate potential and realized revenue
+  let potentialRev = 0;
+  let realizedRev = 0;
+  
+  leads.forEach(l => {
+    const c = DATA.courses.find(x => x.name.toLowerCase() === (l.course || '').toLowerCase());
+    if(c) {
+      const p = getLeadPrice(l, c);
+      if(l.classification === 'Quente') potentialRev += p;
+      if(l.status === 'Convertido') realizedRev += p;
+    }
+  });
+  
+  realizedRev += (DATA.finances.extraRev || 0);
+  
+  const exp = getTotalExpenses();
+  let roi = 0;
+  if(exp > 0) {
+    roi = ((realizedRev - exp) / exp) * 100;
+  }
+  
+  document.getElementById('o-total').innerText = total;
+  document.getElementById('o-hot').innerText = hots;
+  document.getElementById('o-rev-real').innerText = new Intl.NumberFormat('pt-PT').format(realizedRev) + ' Kz';
+  document.getElementById('o-roi').innerText = (exp > 0 ? new Intl.NumberFormat('pt-PT').format(Math.round(roi)) + '%' : '—');
+  
+  let roiSub = 'Invista para ver o ROI';
+  if(exp > 0) {
+    if(roi > 0) roiSub = `<span style="color:var(--teal)">Lucro positivo</span>`;
+    else if(roi < 0) roiSub = `<span style="color:var(--red)">Prejuízo</span>`;
+    else roiSub = `Ponto de equilíbrio`;
+  }
+  document.getElementById('o-roi-sub').innerHTML = roiSub;
+  
+  // AI Insights Generation
+  let insightsHTML = '';
+  
+  const convRate = total > 0 ? (conversions / total) * 100 : 0;
+  if(total > 0) {
+    if(convRate < 5) {
+      insightsHTML += `<div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--red); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>⚠️ Conversão Baixa (${Math.round(convRate)}%):</strong> A sua taxa de conversão está a baixo de 5%. Reforce a urgência no primeiro contacto com leads quentes e reveja a sua oferta.</div>`;
+    } else if (convRate < 15) {
+      insightsHTML += `<div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--amber); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>⚡ Conversão Saudável (${Math.round(convRate)}%):</strong> Está no caminho certo. Faça remarketing aos leads Mornos para ultrapassar a barreira dos 15%.</div>`;
+    } else {
+      insightsHTML += `<div style="background: rgba(0, 229, 160, 0.1); border-left: 3px solid var(--teal); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>🔥 Excelente Conversão (${Math.round(convRate)}%):</strong> O seu processo de vendas está optimizado. É o momento ideal para aumentar o investimento em Tráfego para escalar.</div>`;
+    }
+  }
+  
+  const pendingHot = leads.filter(l => l.classification === 'Quente' && l.status !== 'Convertido').length;
+  if(pendingHot > 0) {
+    insightsHTML += `<div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--amber); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>💰 Dinheiro na Mesa:</strong> Tem ${pendingHot} Lead(s) Quente(s) por fechar. Use o botão do WhatsApp no Pipeline agora mesmo para recuperar essa receita.</div>`;
+  }
+  
+  if(exp > 0) {
+    if(roi < 0) {
+      insightsHTML += `<div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--red); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>🚨 Alerta Financeiro:</strong> O seu ROI está negativo. O Custo por Lead está muito alto ou a conversão precisa subir com urgência.</div>`;
+    } else if(roi > 150) {
+      insightsHTML += `<div style="background: rgba(0, 229, 160, 0.1); border-left: 3px solid var(--teal); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>📈 Máquina de Lucro:</strong> ROI formidável de ${Math.round(roi)}%. Com esta margem, pode dar-se ao luxo de pagar mais caro por anúncios e dominar o mercado.</div>`;
+    }
+  }
+  
+  // Contact Rate & Recent Contacts Logic
+  const novos = leads.filter(l => l.status === 'Novo').length;
+  const contactados = leads.filter(l => l.status === 'Contactado' || l.status === 'Convertido').length;
+  
+  renderContactChart(novos, contactados);
+  
+  const recentList = document.getElementById('recent-contacts-list');
+  const contactedLeads = leads.filter(l => l.status === 'Contactado' || l.status === 'Convertido')
+                              .sort((a,b) => (b.contactedAt || 0) - (a.contactedAt || 0))
+                              .slice(0, 5);
+                              
+  if(contactedLeads.length === 0) {
+    recentList.innerHTML = '<p style="color: var(--text-dim); font-size: 13px;">Ninguém foi contactado ainda.</p>';
+  } else {
+    recentList.innerHTML = '';
+    contactedLeads.forEach(l => {
+      recentList.innerHTML += `
+        <div style="display:flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid var(--border);">
+          <div>
+            <div style="font-weight: 500; font-size: 13px;">${l.name}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${l.course || 'Sem Curso'}</div>
+          </div>
+          <span class="badge b-gray" style="font-size: 9px;">${l.status}</span>
+        </div>
+      `;
+    });
+  }
+  
+  // AI Contact Rate Insight
+  const totalActionable = novos + contactados;
+  if(totalActionable > 0) {
+    const contactRate = (contactados / totalActionable) * 100;
+    if(contactRate < 50) {
+      insightsHTML += `<div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--red); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>📞 Baixa Proactividade (${Math.round(contactRate)}%):</strong> Tem muitos leads acumulados. A equipa precisa de contactar os leads mais rápido antes que arrefeçam!</div>`;
+    } else if(contactRate >= 90) {
+      insightsHTML += `<div style="background: rgba(0, 229, 160, 0.1); border-left: 3px solid var(--teal); padding: 10px; border-radius: 4px; font-size: 13px;"><strong>⚡ Equipa Rápida (${Math.round(contactRate)}%):</strong> O tempo de resposta está excelente. Quase nenhum lead fica esquecido.</div>`;
+    }
+  }
+  
+  if(insightsHTML === '') {
+    insightsHTML = '<p style="color: var(--text-dim); font-size: 13px;">Importe dados ou converta leads para começar a receber análises.</p>';
+  }
+  
+  const aiEl = document.getElementById('ai-insights');
+  if(aiEl) aiEl.innerHTML = insightsHTML;
+  
+  renderCharts();
+  renderTopCourses();
+}
+
+function renderContactChart(novos, contactados) {
+  const ctx = document.getElementById('chartContact').getContext('2d');
+  
+  if(typeof contactChart !== 'undefined' && contactChart) contactChart.destroy();
+  if(novos === 0 && contactados === 0) return;
+  
+  contactChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Aguardam Contacto', 'Já Contactados'],
+      datasets: [{
+        data: [novos, contactados],
+        backgroundColor: ['#EF4444', '#00E5A0'],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#9CA3AF', font: { family: "'Inter', sans-serif", size: 11 }, padding: 15 } }
+      }
+    }
+  });
+}
+
+// ── FINANCE LOGIC ──
+function updateFinances() {
+  const f = DATA.finances;
+  document.getElementById('f-ads').value = f.ads || '';
+  document.getElementById('f-room').value = f.room || '';
+  document.getElementById('f-inet').value = f.inet || '';
+  document.getElementById('f-trans').value = f.trans || '';
+  document.getElementById('f-food').value = f.food || '';
+  document.getElementById('f-other').value = f.other || '';
+  document.getElementById('f-rev-extra').value = f.extraRev || '';
+  
+  // Calculate Revenue Breakdown
+  const revList = document.getElementById('finance-rev-list');
+  revList.innerHTML = '';
+  
+  let totalPipelineRev = 0;
+  const courseRevs = {};
+  
+  DATA.leads.forEach(l => {
+    if(l.status === 'Convertido') {
+      const c = DATA.courses.find(x => x.name.toLowerCase() === (l.course || '').toLowerCase());
+      if(c) {
+        const p = getLeadPrice(l, c);
+        courseRevs[c.name] = (courseRevs[c.name] || 0) + p;
+        totalPipelineRev += p;
+      }
+    }
+  });
+  
+  if(Object.keys(courseRevs).length === 0) {
+    revList.innerHTML = '<p style="color:var(--text-dim); font-size: 13px;">Nenhuma inscrição validada. Transforme um Lead em "Convertido" no Pipeline.</p>';
+  } else {
+    for(let cName in courseRevs) {
+      revList.innerHTML += `<div class="data-row"><span class="d-name">${cName}</span><span class="d-val" style="color:var(--teal)">${new Intl.NumberFormat('pt-PT').format(courseRevs[cName])} Kz</span></div>`;
+    }
+  }
+  
+  const totalRev = totalPipelineRev + (f.extraRev || 0);
+  const totalExp = getTotalExpenses();
+  const profit = totalRev - totalExp;
+  const roi = totalExp > 0 ? (profit / totalExp) * 100 : 0;
+  
+  document.getElementById('fin-rev-total').innerText = new Intl.NumberFormat('pt-PT').format(totalRev) + ' Kz';
+  document.getElementById('fin-exp-total').innerText = new Intl.NumberFormat('pt-PT').format(totalExp) + ' Kz';
+  document.getElementById('fin-profit').innerText = new Intl.NumberFormat('pt-PT').format(profit) + ' Kz';
+  document.getElementById('fin-roi').innerText = (totalExp > 0 ? new Intl.NumberFormat('pt-PT').format(Math.round(roi)) + '%' : '—');
+  
+  document.getElementById('fin-profit').style.color = profit >= 0 ? 'var(--teal)' : 'var(--red)';
+  
+  renderExpensesChart(profit);
+}
+
+function renderExpensesChart(profit) {
+  const ctx = document.getElementById('chartExpenses').getContext('2d');
+  const f = DATA.finances;
+  
+  // We compare the total expenses slices against the profit
+  // If profit is negative, we don't show it as a slice to avoid chart confusion, 
+  // or we just show the expenses breakdown.
+  
+  const values = [f.ads, f.room, f.inet, f.trans, f.food, f.other];
+  const labels = ['Anúncios', 'Sala', 'Internet', 'Transporte', 'Alimentação', 'Outros Despesas'];
+  const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6', '#EC4899', '#9CA3AF'];
+  
+  if(profit > 0) {
+    values.unshift(profit);
+    labels.unshift('Lucro Líquido');
+    colors.unshift('#00E5A0'); // Teal for profit
+  }
+  
+  if(values.every(v => !v)) {
+    if(expChart) expChart.destroy();
+    return;
+  }
+  
+  if(expChart) expChart.destroy();
+  
+  expChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: { position: 'right', labels: { color: '#9CA3AF', font: { family: "'Inter', sans-serif", size: 11 }, padding: 12 } }
+      }
+    }
+  });
+}
+
+function renderTopCourses() {
+  const counts = {};
+  DATA.leads.forEach(l => {
+    const c = l.course || 'Sem Curso';
+    counts[c] = (counts[c] || 0) + 1;
+  });
+  
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 4);
+  const container = document.getElementById('top-courses-list');
+  container.innerHTML = '';
+  
+  if(sorted.length === 0) {
+    container.innerHTML = `<p style="color: var(--text-dim); font-size: 13px;">Sem dados de cursos.</p>`;
+    return;
+  }
+  
+  sorted.forEach(s => {
+    const pctVal = Math.round((s[1] / DATA.leads.length) * 100);
+    container.innerHTML += `
+      <div style="margin-bottom: 12px;">
+        <div style="display:flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+          <span>${s[0]}</span>
+          <span class="mono">${s[1]} leads</span>
+        </div>
+        <div style="height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden;">
+          <div style="width: ${pctVal}%; height: 100%; background: var(--accent);"></div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function renderCharts() {
+  const leads = DATA.leads;
+  const quente = leads.filter(l => l.classification === 'Quente').length;
+  const morno = leads.filter(l => l.classification === 'Morno').length;
+  const frio = leads.filter(l => l.classification === 'Frio').length;
+
+  const canvas = document.getElementById('chartClass');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (classChart) {
+    classChart.destroy();
+  }
+
+  classChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Quente', 'Morno', 'Frio'],
+      datasets: [{
+        data: [quente, morno, frio],
+        backgroundColor: ['#EF4444', '#F59E0B', '#3B82F6'],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+  });
+}
+
+// ── INIT ──
+function updateUI() {
+  renderCourses();
+  renderPipeline();
+  updateOverview();
+  updateFinances();
+  if(document.getElementById('tab-team').classList.contains('active')) renderTeam();
+}
+
+function renderTeam() {
+  const tbody = document.getElementById('team-tbody');
+  tbody.innerHTML = '';
+  
+  if(DATA.team.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-dim);">Nenhum colaborador adicionado.</td></tr>`;
+    return;
+  }
+  
+  // Calculate daily stats by scanning leads
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  const isToday = (ts) => {
+    if(!ts) return false;
+    if(typeof ts === 'number') return new Date(ts).toISOString().startsWith(todayStr);
+    return String(ts).startsWith(todayStr);
+  };
+  
+  DATA.team.forEach(colab => {
+    // Re-calculate live stats from leads handled by this colab today
+    const contactsToday = DATA.leads.filter(l => l.handledBy === colab.id && isToday(l.contactedAt)).length;
+    const salesToday = DATA.leads.filter(l => l.handledBy === colab.id && l.status === 'Convertido' && isToday(l.convertedAt)).length;
+    
+    let taxa = contactsToday > 0 ? Math.round((salesToday / contactsToday) * 100) : 0;
+    
+    let baseUrl = 'https://infoprodigital98-eng.github.io/formflow-dashbord';
+    const isLocal = window.location.protocol === 'file:';
+    
+    // Se não estiver a rodar localmente, usa a URL real onde o painel está alojado
+    if (!isLocal) {
+       baseUrl = window.location.href.split('?')[0];
+       baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
+    }
+    
+    let linkUI = '';
+    
+    if (colab.passwordHash) {
+      let loginLink = `${baseUrl}/formflow_colab_v5.html`;
+      linkUI = `<div style="margin-bottom: 4px;"><span class="badge b-teal">Ativo (Senha Criada)</span></div>
+                <input type="text" class="form-control" style="font-size: 11px; padding: 4px; width: 140px; display: inline-block; margin-bottom: 4px;" value="${loginLink}" readonly onclick="this.select()">
+                <div style="display:flex; gap: 4px; flex-wrap: wrap;">
+                  <button class="btn btn-secondary btn-sm" style="font-size: 10px; padding: 4px 8px;" onclick="navigator.clipboard.writeText('${loginLink}'); showToast('Link copiado!', 'teal')">Copiar</button>
+                  <a href="${loginLink}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 10px; padding: 4px 8px; text-decoration: none;">Abrir</a>
+                  <button class="btn btn-teal btn-sm" style="font-size: 10px; padding: 4px 8px; background: #25D366; color: #000; border: none;" onclick="sendColabWhatsApp('${colab.name}', '${colab.whatsapp}', '${loginLink}', false)">📱 Enviar Link</button>
+                </div>`;
+    } else {
+      let setupLink = `${baseUrl}/formflow_colab_v5.html?setup=${colab.id}`;
+      linkUI = `<div style="margin-bottom: 4px;"><span class="badge b-warm">Pendente (Configurar Senha)</span></div>
+                <input type="text" class="form-control" style="font-size: 11px; padding: 4px; width: 140px; display: inline-block; border-color: var(--amber); margin-bottom: 4px;" value="${setupLink}" readonly onclick="this.select()">
+                <div style="display:flex; gap: 4px; flex-wrap: wrap;">
+                  <button class="btn btn-secondary btn-sm" style="font-size: 10px; padding: 4px 8px;" onclick="navigator.clipboard.writeText('${setupLink}'); showToast('Link de setup copiado!', 'teal')">Copiar</button>
+                  <a href="${setupLink}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 10px; padding: 4px 8px; text-decoration: none;">Abrir</a>
+                  <button class="btn btn-teal btn-sm" style="font-size: 10px; padding: 4px 8px; background: #25D366; color: #000; border: none;" onclick="sendColabWhatsApp('${colab.name}', '${colab.whatsapp}', '${setupLink}', true)">📱 Enviar Link</button>
+                </div>`;
+    }
+    
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-weight: 500;">${colab.name}</td>
+        <td>${colab.whatsapp}</td>
+        <td><span class="badge b-teal">${contactsToday}</span></td>
+        <td><span class="badge b-hot">${salesToday}</span></td>
+        <td>${taxa}%</td>
+        <td>${linkUI}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" style="font-size: 10px; padding: 4px 8px;" onclick="removeCollaborator('${colab.id}')">Eliminar</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function addCollaboratorPrompt() {
+  const name = prompt("Nome do Colaborador:");
+  if(!name) return;
+  const wa = prompt("WhatsApp do Colaborador (Ex: 244900000000):");
+  if(!wa) return;
+  
+  DATA.team.push({
+    id: 'colab_' + Date.now(),
+    name: name,
+    whatsapp: wa
+  });
+  saveData();
+  showToast("Colaborador adicionado com sucesso!", "teal");
+  renderTeam();
+}
+
+function removeCollaborator(id) {
+  if (confirm("Tem a certeza que deseja remover este colaborador? O acesso dele será revogado imediatamente.")) {
+    DATA.team = DATA.team.filter(t => t.id !== id);
+    
+    // Desassociar leads que estavam atribuídos a este colaborador
+    DATA.leads.forEach(l => {
+      if (l.handledBy === id) {
+        l.handledBy = '';
+      }
+    });
+    
+    saveData();
+    showToast("Colaborador removido com sucesso!", "teal");
+    renderTeam();
+  }
+}
+
+// 4. LIGAÇÃO DO BOTÃO "LER E IMPORTAR"
+document.addEventListener('DOMContentLoaded', () => {
+  const importBtn = document.querySelector('button[onclick*="syncWithGoogleSheets"], .btn-import-sheets');
+  if(importBtn) {
+    importBtn.onclick = (e) => {
+      e.preventDefault();
+      syncWithGoogleSheets(false);
+    };
+  }
+});
+
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  // 1. Configuração
+  const firebaseConfig = {
+    apiKey: "AIzaSyApqoCn_uGg3WirNn_9Uv7q1KxvVdlPLSw",
+    authDomain: "sac-formflow-dashboard-v5.firebaseapp.com",
+    projectId: "sac-formflow-dashboard-v5",
+    storageBucket: "sac-formflow-dashboard-v5.firebasestorage.app",
+    messagingSenderId: "520879763925",
+    appId: "1:520879763925:web:44c1e51b023f6f7cfb4d5c"
+  };
+  // 2. Init
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  window.db = firebase.firestore();
+  
+  // 5. INICIALIZAÇÃO E LOOP (2 MINUTOS)
+  window.onload = () => {
+    if (window.db) {
+      loadData(); // Inicia o "ouvido" do Firebase
+      syncWithGoogleSheets(); // Primeira carga
+      setInterval(syncWithGoogleSheets, 120000); // Repete a cada 2 min
+    }
+  };
+</script>
+</body>
+</html>
