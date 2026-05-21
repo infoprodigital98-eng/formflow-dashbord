@@ -9,8 +9,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -150,23 +148,21 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
 </style>
 </head>
 <body>
-<script>
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-  const el = document.createElement('div');
-  el.style.cssText = 'position:fixed;top:0;left:0;z-index:999999;background:red;color:white;padding:20px;font-size:16px;width:100%;';
-  el.innerHTML = 'JS ERROR: ' + msg + '<br>Line: ' + lineNo + '<br>Col: ' + columnNo + '<br>Stack: ' + (error ? error.stack : '');
-  document.body.prepend(el);
-  return false;
-};
-window.addEventListener('unhandledrejection', function(event) {
-  const el = document.createElement('div');
-  el.style.cssText = 'position:fixed;top:100px;left:0;z-index:999999;background:orange;color:white;padding:20px;font-size:16px;width:100%;';
-  el.innerHTML = 'PROMISE REJECTION: ' + event.reason;
-  document.body.prepend(el);
-});
-</script>
 
-<div class="container">
+<div id="admin-auth-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; padding: 2rem;">
+  <div class="glass-panel" style="max-width: 400px; width: 100%; text-align: center;">
+    <div style="font-size: 40px; margin-bottom: 1rem;">🔐</div>
+    <h2 id="auth-title" style="margin-bottom: 1rem; font-size: 24px;">A Ligar ao Firebase...</h2>
+    <p id="auth-desc" style="color:var(--text-muted); font-size:14px; margin-bottom: 1.5rem;">Por favor, aguarde enquanto sincronizamos os dados.</p>
+    
+    <div id="auth-form" style="display:none;">
+      <input type="password" id="auth-pass" class="form-control" placeholder="Introduza a sua senha" style="text-align:center; margin-bottom: 1rem; font-size: 16px; padding: 12px;" onkeypress="if(event.key === 'Enter') submitAdminAuth()">
+      <button class="btn btn-primary" style="width:100%; font-size: 16px; padding: 12px;" onclick="submitAdminAuth()">Aceder ao Painel</button>
+    </div>
+  </div>
+</div>
+
+<div class="container" id="app-container" style="display:none;">
   
   <header class="header">
     <div class="logo-area">
@@ -414,7 +410,7 @@ window.addEventListener('unhandledrejection', function(event) {
           <label>Link Público do CSV (Google Sheets)</label>
           <input type="url" id="gs-url" class="form-control" value="https://docs.google.com/spreadsheets/d/1zCQ4gTjkS8Wro9g0gyabtMSeSBuvyOCCCmdcdSJ4icE/edit?usp=sharing">
         </div>
-        <button class="btn btn-teal" style="width: 100%; margin-bottom: 1rem;" onclick="syncGoogleSheets()">Ler e Importar Leads via Link</button>
+        <button class="btn btn-teal" style="width: 100%; margin-bottom: 1rem;" onclick="syncWithGoogleSheets()">Ler e Importar Leads via Link</button>
         
         <div style="text-align: center; margin: 1.5rem 0;">
           <span style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">ou</span>
@@ -559,67 +555,136 @@ window.addEventListener('unhandledrejection', function(event) {
 <div id="toast-container"></div>
 
 <script>
-// --- MOTOR E CONFIGURAÇÃO FIREBASE ---
-const firebaseConfig = {
-  apiKey: "AIzaSyApqoCn_uGg3WirNn_9Uv7q1KxvVdlPLSw",
-  authDomain: "sac-formflow-dashboard-v5.firebaseapp.com",
-  projectId: "sac-formflow-dashboard-v5",
-  storageBucket: "sac-formflow-dashboard-v5.firebasestorage.app",
-  messagingSenderId: "520879763925",
-  appId: "1:520879763925:web:44c1e51b023f6f7cfb4d5c"
-};
-
-// Inicializa o Firebase apenas se ainda não foi inicializado
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
 
 const STORE_KEY = 'formflow_crm_v5';
+let classChart = null;
+let contactChart = null;
+let expChart = null;
 
+// O objeto DATA deve manter a estrutura original para não quebrar os cálculos
 let DATA = {
   leads: [],
-  courses: [],
-  team: [],
+  courses: [], // Mantido para compatibilidade com a aba Cursos
   finances: { ads: 0, room: 0, inet: 0, trans: 0, food: 0, other: 0, extraRev: 0 },
-  settings: { syncInterval: 0, push: true, whatsapp: false, waNumber: '', email: false, emailAddress: '' }
+  settings: { syncInterval: 0, push: true, whatsapp: false, waNumber: '', email: false, emailAddress: '' },
+  team: []
 };
 
+// 1. REPARAÇÃO DA LEITURA (Resolve o Dashboard não atualizar)
 function loadData() {
-  const raw = localStorage.getItem(STORE_KEY);
-  if(raw) {
-    const parsed = JSON.parse(raw);
-    DATA = { ...DATA, ...parsed };
-    if(parsed.finances) DATA.finances = { ...DATA.finances, ...parsed.finances };
-    if(parsed.settings) DATA.settings = { ...DATA.settings, ...parsed.settings };
+  console.log("Ligando escuta em tempo real com Firebase...");
+  
+  if (typeof window.db === 'undefined' || !window.db) return;
+  // onSnapshot garante que se o dado mudou no Firebase, ele muda no ecrã na hora
+  window.db.collection("sistema").doc("master").onSnapshot((doc) => {
+    if (doc.exists) {
+      const remote = doc.data();
+      
+      // Atualiza o objeto global DATA com os dados da nuvem
+      DATA.leads = remote.leads || [];
+      DATA.finances = remote.finances || DATA.finances;
+      DATA.team = remote.team || [];
+      DATA.courses = remote.courses || [];
+      
+      // Protege as configurações de Notificação (WhatsApp/Email) e Senhas
+      DATA.settings = { ...DATA.settings, ...remote.settings };
+
+      console.log("Sincronização concluída: " + DATA.leads.length + " leads carregados.");
+      
+      if (typeof restoreAutomationSettings === 'function') restoreAutomationSettings();
+      
+      // Sistema de Autenticação
+      checkAdminAuth();
+      if (isAdminAuthenticated) {
+        if (typeof updateUI === 'function') updateUI();
+      }
+    } else {
+      console.warn("Documento 'master' não encontrado. Criando base...");
+      saveData();
+    }
+  }, (error) => {
+    console.error("Erro crítico na leitura do Firebase:", error);
+  });
+}
+
+// 2. REPARAÇÃO DA GRAVAÇÃO
+function saveData() {
+  if (typeof window.db === 'undefined' || !window.db) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+      return;
   }
   
-  if (typeof db !== 'undefined') {
-    db.collection("sistema").doc("master").onSnapshot((doc) => {
-      if(doc.exists) {
-        const cloudData = doc.data();
-        DATA = { ...DATA, ...cloudData };
-        if(cloudData.finances) DATA.finances = { ...DATA.finances, ...cloudData.finances };
-        if(cloudData.settings) DATA.settings = { ...DATA.settings, ...cloudData.settings };
-        if(!DATA.team) DATA.team = [];
-        
-        updateUI();
-        console.log("Sincronizado com o Google!");
-      }
-    }, (error) => {
-      console.log("Aguardando permissão do Firebase...");
-    });
+  // Clean the DATA object to remove any 'undefined' values that cause Firestore to silently fail/reject the write
+  const cleanData = JSON.parse(JSON.stringify(DATA));
+
+  window.db.collection("sistema").doc("master").set(cleanData)
+    .then(() => {
+      console.log("Dados salvos no Firebase com sucesso.");
+      localStorage.setItem(STORE_KEY, JSON.stringify(cleanData));
+    })
+    .catch(err => console.error("Erro ao salvar no Firebase:", err));
+}
+
+// ── AUTHENTICATION SYSTEM ──
+let isAdminAuthenticated = false;
+
+async function hashPassword(msg) {
+  const msgBuffer = new TextEncoder().encode(msg);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function checkAdminAuth() {
+  if (isAdminAuthenticated) return;
+  
+  const title = document.getElementById('auth-title');
+  const desc = document.getElementById('auth-desc');
+  const form = document.getElementById('auth-form');
+  const passInput = document.getElementById('auth-pass');
+  
+  if (!DATA.settings.adminPassword) {
+    title.innerText = "Criar Senha Mestra";
+    desc.innerText = "Este é o seu primeiro acesso. Defina uma senha segura para proteger o seu CRM.";
+    passInput.placeholder = "Nova Senha Mestra";
+  } else {
+    title.innerText = "Painel Premium";
+    desc.innerText = "Introduza a sua Senha Mestra para continuar.";
+    passInput.placeholder = "Senha Mestra";
+  }
+  form.style.display = 'block';
+  passInput.focus();
+}
+
+async function submitAdminAuth() {
+  const pass = document.getElementById('auth-pass').value;
+  if (!pass) return showToast("A senha não pode estar vazia.", "red");
+  
+  const hash = await hashPassword(pass);
+  
+  if (!DATA.settings.adminPassword) {
+    DATA.settings.adminPassword = hash;
+    saveData();
+    showToast("Senha Mestra criada com sucesso!", "teal");
+    unlockApp();
+  } else {
+    if (DATA.settings.adminPassword === hash) {
+      showToast("Acesso concedido!", "teal");
+      unlockApp();
+    } else {
+      showToast("Senha incorreta.", "red");
+      document.getElementById('auth-pass').value = '';
+    }
   }
 }
 
-function saveData() {
-  localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
-  if (typeof db !== 'undefined') {
-    db.collection("sistema").doc("master").set(DATA)
-      .catch(e => console.error("Erro na nuvem:", e));
-  }
+function unlockApp() {
+  isAdminAuthenticated = true;
+  document.getElementById('admin-auth-overlay').style.display = 'none';
+  document.getElementById('app-container').style.display = 'block';
   updateUI();
 }
+
 function resetData() {
   if(confirm("Deseja apagar TUDO? Cursos e Leads serão removidos.")) {
     localStorage.removeItem(STORE_KEY);
@@ -795,7 +860,7 @@ function toggleAutoSync() {
   
   if(val > 0) {
     const ms = val * 60 * 1000;
-    autoSyncTimer = setInterval(() => syncGoogleSheets(true), ms);
+    autoSyncTimer = setInterval(() => syncWithGoogleSheets(true), ms);
     showToast(`Automação ativada: verificar a cada ${val} minutos.`, "teal");
     requestPushPermission();
   } else {
@@ -848,7 +913,7 @@ function restoreAutomationSettings() {
   const val = DATA.settings.syncInterval;
   if(val > 0) {
     if(autoSyncTimer) clearInterval(autoSyncTimer);
-    autoSyncTimer = setInterval(() => syncGoogleSheets(true), val * 60 * 1000);
+    autoSyncTimer = setInterval(() => syncWithGoogleSheets(true), val * 60 * 1000);
   }
 }
 
@@ -876,43 +941,36 @@ function dispatchExternalNotifications(name, course) {
 }
 
 // ── IMPORT LOGIC (The Core CRM Engine) ──
-async function syncGoogleSheets(silent = false) {
-  let url = document.getElementById('gs-url').value.trim();
+// 3. REPARAÇÃO DO BOTÃO E SYNC AUTOMÁTICO (Resolve Ponto 1 e 2)
+async function syncWithGoogleSheets(silent = false) {
+  let sheetUrl = document.getElementById('gs-url') ? document.getElementById('gs-url').value.trim() : '';
   
-  // Auto-convert standard share link to CSV export link
-  if(url.includes('/edit?')) {
-    url = url.replace(/\/edit\?.*/, '/export?format=csv');
+  // Transform standard share link to CSV export link
+  if (sheetUrl.includes('/edit')) {
+    sheetUrl = sheetUrl.replace(/\/edit.*$/, '/export?format=csv');
+  } else if (!sheetUrl) {
+    // Fallback if empty
+    sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUUDgtUOMmleG9En5WpxyOZrrflt2GUQDgwqVE-6aMBLYLbQv6i5N5y7bC5SajqSjHPzt8UJUqbZ8a/pub?gid=734060596&single=true&output=csv';
   }
   
-  if(!url.includes('export?format=csv') && !url.includes('output=csv')) {
-    if(!silent) showToast("URL inválido. Cole o link de partilha do Google Sheets.", "red");
-    return;
-  }
-  
-  if(!silent) showToast("A sincronizar dados...", "amber");
-  
+  if (!silent) showToast("Sincronizando com Google Sheets...", "blue");
+
   try {
-    // Utilização de um Proxy CORS mais fiável (codetabs)
-    const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url);
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error("Acesso negado");
+    const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(sheetUrl);
+    const response = await fetch(proxyUrl);
+    const csvText = await response.text();
     
-    const text = await res.text();
-    
-    // Check if Google returned an error HTML page (e.g. 404 Not Found or Private Login screen)
-    if(text.includes('<!DOCTYPE html>') || text.toLowerCase().includes('page introuvable') || text.includes('<html')) {
-        throw new Error("Privado");
+    if (csvText.trim().startsWith('<')) {
+      console.error("A resposta não é um CSV válido:", csvText.substring(0, 100));
+      if (!silent) showToast("Erro: O link devolveu HTML. O Google Sheets tem de estar partilhado/público.", "red");
+      return;
     }
     
-    processLeadsCSV(text, silent);
-  } catch(e) {
-    if(!silent) {
-      if(e.message === "Privado") {
-        showToast("Erro: Documento Privado ou Eliminado. Mude o acesso para 'Qualquer pessoa com o link'.", "red");
-      } else {
-        showToast("Erro: Falha na sincronização. Verifique se tem internet e se o link está correto.", "red");
-      }
-    }
+    // Use the smart CSV parser that already knows how to map columns and classify leads
+    processLeadsCSV(csvText, silent);
+  } catch (error) {
+    console.error("Falha na sincronização:", error);
+    if (!silent) showToast("Erro ao conectar ao Google Sheets", "red");
   }
 }
 
@@ -965,8 +1023,12 @@ function processLeadsCSV(csvText, silent = false) {
           action = 'Remarketing + Follow-up';
         }
         
-        // Check if lead already exists to avoid exact duplicates (by email or phone)
-        const exists = DATA.leads.find(l => (l.email && l.email === email) || (l.phone && l.phone === phone && phone.length > 5));
+        // Check if lead already exists to avoid exact duplicates
+        const exists = DATA.leads.find(l => 
+          (email && l.email === email) || 
+          (phone && phone.length > 5 && l.phone === phone) ||
+          (!email && !phone && l.name === name) // Fallback for name only leads
+        );
         if(exists) return; 
         
         DATA.leads.push({
@@ -1134,6 +1196,21 @@ function openWhatsApp(id, name, phone, course, classification) {
     msg += `notei o teu interesse em melhorar os teus resultados com o ${course}. Gostaria de entender o teu momento atual e enviar-te um material ou oportunidade.`;
   } else {
     msg += `obrigado por mostrar interesse no nosso trabalho sobre ${course}. Estamos a construir uma comunidade forte e adorávamos manter o contacto!`;
+  }
+  
+  const url = `https://wa.me/${cleanPhone.replace('+','')}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function sendColabWhatsApp(name, phone, link, isSetup) {
+  let cleanPhone = phone.replace(/[^\d+]/g, '');
+  if(cleanPhone.startsWith('9')) cleanPhone = '+244' + cleanPhone;
+  
+  let msg = '';
+  if (isSetup) {
+    msg = `Olá ${name}, a tua conta de colaborador no FormFlow foi criada! Acede a este link para definires a tua senha de acesso:\n${link}`;
+  } else {
+    msg = `Olá ${name}, aqui tens o link de acesso ao painel FormFlow:\n${link}\nUsa o teu número e a senha que definiste para entrares.`;
   }
   
   const url = `https://wa.me/${cleanPhone.replace('+','')}?text=${encodeURIComponent(msg)}`;
@@ -1418,33 +1495,30 @@ function renderTopCourses() {
 }
 
 function renderCharts() {
-  const ctx = document.getElementById('chartClass').getContext('2d');
-  
-  const q = DATA.leads.filter(l => l.classification === 'Quente').length;
-  const m = DATA.leads.filter(l => l.classification === 'Morno').length;
-  const f = DATA.leads.filter(l => l.classification === 'Frio').length;
-  
-  if(classChart) classChart.destroy();
-  
+  const leads = DATA.leads;
+  const quente = leads.filter(l => l.classification === 'Quente').length;
+  const morno = leads.filter(l => l.classification === 'Morno').length;
+  const frio = leads.filter(l => l.classification === 'Frio').length;
+
+  const canvas = document.getElementById('chartClass');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (classChart) {
+    classChart.destroy();
+  }
+
   classChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Quentes (Prioridade Alta)', 'Mornos (Média)', 'Frios (Baixa)'],
+      labels: ['Quente', 'Morno', 'Frio'],
       datasets: [{
-        data: [q, m, f],
+        data: [quente, morno, frio],
         backgroundColor: ['#EF4444', '#F59E0B', '#3B82F6'],
-        borderWidth: 0,
-        hoverOffset: 4
+        borderWidth: 0
       }]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '75%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#9CA3AF', font: { family: "'Inter', sans-serif", size: 11 }, padding: 15 } }
-      }
-    }
+    options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
   });
 }
 
@@ -1482,9 +1556,36 @@ function renderTeam() {
     
     let taxa = contactsToday > 0 ? Math.round((salesToday / contactsToday) * 100) : 0;
     
-    let baseUrl = window.location.href.split('?')[0];
-    baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
-    const magicLink = `${baseUrl}/formflow_colab_v5.html?colab=${colab.id}`;
+    let baseUrl = 'https://infoprodigital98-eng.github.io/formflow-dashbord';
+    const isLocal = window.location.protocol === 'file:';
+    
+    // Se não estiver a rodar localmente, usa a URL real onde o painel está alojado
+    if (!isLocal) {
+       baseUrl = window.location.href.split('?')[0];
+       baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
+    }
+    
+    let linkUI = '';
+    
+    if (colab.passwordHash) {
+      let loginLink = `${baseUrl}/formflow_colab_v5.html`;
+      linkUI = `<div style="margin-bottom: 4px;"><span class="badge b-teal">Ativo (Senha Criada)</span></div>
+                <input type="text" class="form-control" style="font-size: 11px; padding: 4px; width: 140px; display: inline-block; margin-bottom: 4px;" value="${loginLink}" readonly onclick="this.select()">
+                <div style="display:flex; gap: 4px; flex-wrap: wrap;">
+                  <button class="btn btn-secondary btn-sm" style="font-size: 10px; padding: 4px 8px;" onclick="navigator.clipboard.writeText('${loginLink}'); showToast('Link copiado!', 'teal')">Copiar</button>
+                  <a href="${loginLink}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 10px; padding: 4px 8px; text-decoration: none;">Abrir</a>
+                  <button class="btn btn-teal btn-sm" style="font-size: 10px; padding: 4px 8px; background: #25D366; color: #000; border: none;" onclick="sendColabWhatsApp('${colab.name}', '${colab.whatsapp}', '${loginLink}', false)">📱 Enviar Link</button>
+                </div>`;
+    } else {
+      let setupLink = `${baseUrl}/formflow_colab_v5.html?setup=${colab.id}`;
+      linkUI = `<div style="margin-bottom: 4px;"><span class="badge b-warm">Pendente (Configurar Senha)</span></div>
+                <input type="text" class="form-control" style="font-size: 11px; padding: 4px; width: 140px; display: inline-block; border-color: var(--amber); margin-bottom: 4px;" value="${setupLink}" readonly onclick="this.select()">
+                <div style="display:flex; gap: 4px; flex-wrap: wrap;">
+                  <button class="btn btn-secondary btn-sm" style="font-size: 10px; padding: 4px 8px;" onclick="navigator.clipboard.writeText('${setupLink}'); showToast('Link de setup copiado!', 'teal')">Copiar</button>
+                  <a href="${setupLink}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 10px; padding: 4px 8px; text-decoration: none;">Abrir</a>
+                  <button class="btn btn-teal btn-sm" style="font-size: 10px; padding: 4px 8px; background: #25D366; color: #000; border: none;" onclick="sendColabWhatsApp('${colab.name}', '${colab.whatsapp}', '${setupLink}', true)">📱 Enviar Link</button>
+                </div>`;
+    }
     
     tbody.innerHTML += `
       <tr>
@@ -1493,10 +1594,7 @@ function renderTeam() {
         <td><span class="badge b-teal">${contactsToday}</span></td>
         <td><span class="badge b-hot">${salesToday}</span></td>
         <td>${taxa}%</td>
-        <td>
-          <input type="text" class="form-control" style="font-size: 11px; padding: 4px; width: 250px; display: inline-block;" value="${magicLink}" readonly onclick="this.select()">
-          <button class="btn btn-secondary btn-sm" onclick="showToast('Link copiado!', 'teal')">Copiar</button>
-        </td>
+        <td>${linkUI}</td>
       </tr>
     `;
   });
@@ -1517,10 +1615,43 @@ function addCollaboratorPrompt() {
   showToast("Colaborador adicionado com sucesso!", "teal");
   renderTeam();
 }
+// 4. LIGAÇÃO DO BOTÃO "LER E IMPORTAR"
+document.addEventListener('DOMContentLoaded', () => {
+  const importBtn = document.querySelector('button[onclick*="syncWithGoogleSheets"], .btn-import-sheets');
+  if(importBtn) {
+    importBtn.onclick = (e) => {
+      e.preventDefault();
+      syncWithGoogleSheets(false);
+    };
+  }
+});
 
-loadData();
-restoreAutomationSettings();
-updateUI();
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  // 1. Configuração
+  const firebaseConfig = {
+    apiKey: "AIzaSyApqoCn_uGg3WirNn_9Uv7q1KxvVdlPLSw",
+    authDomain: "sac-formflow-dashboard-v5.firebaseapp.com",
+    projectId: "sac-formflow-dashboard-v5",
+    storageBucket: "sac-formflow-dashboard-v5.firebasestorage.app",
+    messagingSenderId: "520879763925",
+    appId: "1:520879763925:web:44c1e51b023f6f7cfb4d5c"
+  };
+  // 2. Init
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  window.db = firebase.firestore();
+  
+  // 5. INICIALIZAÇÃO E LOOP (2 MINUTOS)
+  window.onload = () => {
+    if (window.db) {
+      loadData(); // Inicia o "ouvido" do Firebase
+      syncWithGoogleSheets(); // Primeira carga
+      setInterval(syncWithGoogleSheets, 120000); // Repete a cada 2 min
+    }
+  };
 </script>
 </body>
 </html>
