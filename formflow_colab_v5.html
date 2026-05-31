@@ -97,7 +97,32 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
 
 #toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
 .toast { background: rgba(15, 15, 20, 0.95); border: 1px solid var(--border); padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.3s ease; border-left: 4px solid var(--teal); }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.nav-tabs { display: flex; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px; gap: 4px; overflow-x: auto; margin-top: 1rem;}
+.tab-btn { padding: 8px 16px; border-radius: 10px; border: none; background: transparent; color: var(--text-muted); font-family: var(--font-display); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.tab-btn.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.tab-btn:hover:not(.active) { color: var(--text-main); }
+
+.tab-content { display: none; animation: fadeIn 0.4s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Chat Interno & AI ── */
+.chat-container { display: flex; flex-direction: column; height: 60vh; max-height: 600px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.chat-messages { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; position: relative; }
+.chat-msg.mine { align-self: flex-end; background: linear-gradient(135deg, var(--teal), #00b37e); color: #000; border-bottom-right-radius: 4px; }
+.chat-msg.other { align-self: flex-start; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.chat-msg.ai { align-self: flex-start; background: rgba(123, 111, 255, 0.15); color: var(--text-main); border: 1px solid rgba(123, 111, 255, 0.3); border-bottom-left-radius: 4px; }
+.chat-msg .sender { font-size: 10px; font-weight: 600; margin-bottom: 4px; opacity: 0.8; }
+.chat-msg .time { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; display: block; }
+.chat-input-area { padding: 1rem; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; gap: 10px; }
+.chat-input-area input { flex: 1; padding: 12px 16px; border-radius: 20px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; outline: none; }
+.chat-input-area input:focus { border-color: var(--teal); }
+.chat-input-area button { padding: 0 20px; border-radius: 20px; font-weight: 600; }
+
+.ai-suggestions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+.ai-sugg-btn { background: rgba(123, 111, 255, 0.1); border: 1px solid rgba(123, 111, 255, 0.3); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; transition: 0.2s; }
+.ai-sugg-btn:hover { background: rgba(123, 111, 255, 0.2); }
 </style>
 </head>
 <body>
@@ -132,7 +157,16 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
         <span id="colab-name">Carregando...</span>
       </div>
     </div>
+    
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('pipeline', this)">Pipeline</button>
+      <button class="tab-btn" onclick="switchTab('courses', this)">Cursos</button>
+      <button class="tab-btn" onclick="switchTab('ai', this)">🤖 Consultor AI</button>
+      <button class="tab-btn" onclick="switchTab('chat', this)">💬 Chat da Equipa</button>
+    </div>
   </header>
+
+  <main id="tab-pipeline" class="tab-content active">
 
   <div class="grid-3">
     <div class="glass-panel metric-card amber">
@@ -150,15 +184,22 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
   </div>
 
   <div class="glass-panel">
-    <h2 style="font-size: 18px; margin-bottom: 1.5rem;">Os Meus Leads</h2>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 18px;" id="pipeline-title">Pipeline</h2>
+        <p style="font-size: 13px; color: var(--text-muted);">Veja os leads do curso atribuído a si e altere o formato final da venda.</p>
+      </div>
+    </div>
+    
     <div style="overflow-x: auto;">
       <table>
         <thead>
           <tr>
             <th>Lead / Contacto</th>
-            <th>Curso</th>
+            <th>Curso Solicitado</th>
             <th>Classificação</th>
-            <th>Status (Acção)</th>
+            <th>Formato</th>
+            <th>Status / Atendimento</th>
           </tr>
         </thead>
         <tbody id="leads-tbody">
@@ -167,6 +208,90 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
       </table>
     </div>
   </div>
+  </main>
+
+  <!-- TAB: CURSOS -->
+  <main id="tab-courses" class="tab-content">
+    <div class="glass-panel">
+      <h2 style="font-size: 18px; margin-bottom: 8px;">Tabela de Cursos</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">Informações de preços e formatos disponíveis para consulta.</p>
+      
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Treinamento</th>
+              <th>Formato Permitido</th>
+              <th>Preço (Kz)</th>
+            </tr>
+          </thead>
+          <tbody id="courses-tbody">
+            <!-- Render via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB: AI -->
+  <main id="tab-ai" class="tab-content">
+    <div class="glass-panel" style="background: linear-gradient(145deg, rgba(123, 111, 255, 0.05), rgba(255,255,255,0.02)); border-color: rgba(123, 111, 255, 0.2); margin-bottom: 1.5rem;">
+      <h2 style="font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">🤖</span> Desempenho Pessoal & Alertas
+      </h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem;">Análise em tempo real do seu tempo de resposta.</p>
+      
+      <div id="ai-colab-insights" style="display: flex; flex-direction: column; gap: 12px;">
+        <p style="color: var(--text-dim); font-size: 13px;">A aguardar dados...</p>
+      </div>
+    </div>
+    
+    <div class="glass-panel" style="padding: 0; border: none; background: transparent;">
+      <h2 style="font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">🧠</span> Assistente Virtual (Treinador)
+      </h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1rem;">Pergunte-me como fechar mais vendas, quebrar objeções ou acelerar leads.</p>
+      
+      <div class="ai-suggestions">
+        <button class="ai-sugg-btn" onclick="sendAiMessage('Como quebrar objeção de preço?')">Objeção: Tá muito caro</button>
+        <button class="ai-sugg-btn" onclick="sendAiMessage('O lead visualizou e não respondeu. O que faço?')">Lead não responde</button>
+        <button class="ai-sugg-btn" onclick="sendAiMessage('Como criar urgência?')">Criar Urgência</button>
+        <button class="ai-sugg-btn" onclick="sendAiMessage('Como aplicar storytelling?')">Dica de Storytelling</button>
+      </div>
+      
+      <div class="chat-container">
+        <div class="chat-messages" id="ai-chat-box">
+          <div class="chat-msg ai">
+            <div class="sender">Consultor AI FormFlow</div>
+            <div>Olá! Estou aqui para o ajudar a bater a sua meta de vendas. Pode usar os botões acima ou perguntar-me sobre guiões de vendas.</div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="ai-chat-input" placeholder="Pergunte algo sobre vendas..." onkeypress="if(event.key === 'Enter') handleAiChatSubmit()">
+          <button class="btn btn-teal" onclick="handleAiChatSubmit()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- TAB: CHAT -->
+  <main id="tab-chat" class="tab-content">
+    <div class="glass-panel" style="padding: 0; border: none; background: transparent;">
+      <h2 style="font-size: 18px; margin-bottom: 8px;">Chat Interno</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 1rem;">Fale com o administrador e com a restante equipa em tempo real.</p>
+      
+      <div class="chat-container">
+        <div class="chat-messages" id="team-chat-box">
+          <!-- Render via JS -->
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="team-chat-input" placeholder="Escreva uma mensagem..." onkeypress="if(event.key === 'Enter') sendTeamMessage()">
+          <button class="btn btn-teal" onclick="sendTeamMessage()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
 </div>
 
 <div id="error-msg" style="display:none; text-align:center; padding: 4rem 1rem;">
@@ -354,14 +479,130 @@ async function submitColabLogin() {
 
 function unlockApp() {
   isColabAuthenticated = true;
-  document.getElementById('colab-auth-overlay').style.display = 'none';
+  const overlay = document.getElementById('colab-auth-overlay');
+  if(overlay) overlay.style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('colab-name').innerText = `Bem-vindo, ${colabData.name}`;
   updateUI();
+  if (!teamChatListenerActive) initTeamChatListener();
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+  if(tabId === 'pipeline') renderPipeline();
+  if(tabId === 'courses') renderCourses();
+  if(tabId === 'ai') renderAI();
+  // Se for a aba de Chat Interno, o listener faz o auto-scroll quando aberto
+  if(tabId === 'chat') {
+    const box = document.getElementById('team-chat-box');
+    if(box) box.scrollTop = box.scrollHeight;
+  }
 }
 
 function updateUI() {
+  renderPipeline();
+  renderCourses();
+  renderAI();
+}
+
+function renderAI() {
+  const container = document.getElementById('ai-colab-insights');
+  if(!container) return;
+  container.innerHTML = '';
+  
+  // 1. Calculate SLA (Leads waiting > 10 min for this course)
+  let pendingLeads = [];
+  if (colabData.assignedCourse && colabData.assignedCourse !== 'Todos') {
+    pendingLeads = DATA.leads.filter(l => l.course === colabData.assignedCourse && l.status === 'Novo' && (!l.handledBy || l.handledBy === colabId));
+  } else {
+    pendingLeads = DATA.leads.filter(l => l.status === 'Novo' && (!l.handledBy || l.handledBy === colabId));
+  }
+  
+  const now = Date.now();
+  let delayedLeads = [];
+  pendingLeads.forEach(l => {
+    if(l.addedAt) {
+      const waitTime = Math.floor((now - new Date(l.addedAt).getTime()) / 60000);
+      if(waitTime >= 10) delayedLeads.push({name: l.name, waitTime});
+    }
+  });
+  
+  if(delayedLeads.length > 0) {
+    let leadNames = delayedLeads.map(d => `${d.name} (${d.waitTime}m)`).join(', ');
+    container.innerHTML += `
+      <div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--red); padding: 12px; border-radius: var(--radius-sm);">
+        <strong style="color: var(--red); display: block; margin-bottom: 4px;">🚨 Alerta de SLA: Leads em Espera!</strong>
+        <span style="font-size: 13px; color: var(--text-main);">Existem ${delayedLeads.length} leads aguardando resposta há mais de 10 minutos (${leadNames}). O tempo de resposta rápido é o segredo da conversão. Vá ao Pipeline e contacte-os!</span>
+      </div>
+    `;
+  } else {
+    container.innerHTML += `
+      <div style="background: rgba(0, 229, 160, 0.1); border-left: 3px solid var(--teal); padding: 12px; border-radius: var(--radius-sm);">
+        <strong style="color: var(--teal); display: block; margin-bottom: 4px;">✅ Tempo de Resposta Excelente</strong>
+        <span style="font-size: 13px; color: var(--text-main);">O pipeline está limpo. Não há leads novos em espera.</span>
+      </div>
+    `;
+  }
+  
+  // 2. Calculate My Conversion Rate
   const myLeads = DATA.leads.filter(l => l.handledBy === colabId);
+  const totalHandled = myLeads.filter(l => l.status !== 'Novo').length;
+  const totalConverted = myLeads.filter(l => l.status === 'Convertido').length;
+  const convRate = totalHandled > 0 ? Math.round((totalConverted / totalHandled) * 100) : 0;
+  
+  let performanceTip = "";
+  if(totalHandled < 5) {
+    performanceTip = "Ainda tem poucos atendimentos para avaliar a performance. Continue o bom trabalho!";
+  } else if(convRate >= 20) {
+    performanceTip = "Desempenho fenomenal! A sua taxa de conversão está muito alta. Continue a usar a sua estratégia atual.";
+  } else if (convRate >= 10) {
+    performanceTip = "Desempenho estável. Para fechar mais vendas, tente criar maior urgência ou oferecer bónus limitados aos leads Mornos.";
+  } else {
+    performanceTip = "A sua taxa de fecho está abaixo dos 10%. <strong>Dica do Consultor:</strong> Faça mais perguntas abertas para entender a dor do cliente antes de oferecer o curso. Foque em resolver um problema.";
+  }
+  
+  container.innerHTML += `
+    <div style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--accent); padding: 12px; border-radius: var(--radius-sm); margin-top: 8px;">
+      <strong style="color: var(--accent); display: block; margin-bottom: 4px;">📊 O Seu Desempenho (Taxa de Conversão: ${convRate}%)</strong>
+      <span style="font-size: 13px; color: var(--text-main);">${performanceTip}</span>
+    </div>
+  `;
+}
+
+function renderCourses() {
+  const tbody = document.getElementById('courses-tbody');
+  tbody.innerHTML = '';
+  
+  if(!DATA.courses || DATA.courses.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-dim);">Nenhum curso cadastrado.</td></tr>`;
+    return;
+  }
+  
+  DATA.courses.forEach(c => {
+    let priceText = c.format === 'Híbrido' 
+      ? `Online: ${new Intl.NumberFormat('pt-PT').format(c.priceOnline||0)} Kz<br>Presencial: ${new Intl.NumberFormat('pt-PT').format(c.pricePresencial||0)} Kz`
+      : `${new Intl.NumberFormat('pt-PT').format(c.price||0)} Kz`;
+      
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-weight: 500;">${c.name}</td>
+        <td><span class="badge b-gray">${c.format || 'Online'}</span></td>
+        <td>${priceText}</td>
+      </tr>
+    `;
+  });
+}
+
+function renderPipeline() {
+  // Filter leads based on assignedCourse
+  let viewLeads = DATA.leads;
+  
+  if (colabData.assignedCourse && colabData.assignedCourse !== 'Todos') {
+    viewLeads = DATA.leads.filter(l => l.course === colabData.assignedCourse);
+  }
   
   const todayStr = new Date().toISOString().split('T')[0];
   const isToday = (ts) => {
@@ -370,7 +611,9 @@ function updateUI() {
     return String(ts).startsWith(todayStr);
   };
   
-  const pendentes = myLeads.filter(l => l.status === 'Novo').length;
+  // Calculate stats for THIS colab ONLY
+  const myLeads = DATA.leads.filter(l => l.handledBy === colabId);
+  const pendentes = viewLeads.filter(l => l.status === 'Novo' && (!l.handledBy || l.handledBy === colabId)).length;
   const contactadosHoje = myLeads.filter(l => l.status !== 'Novo' && isToday(l.contactedAt)).length;
   const vendasHoje = myLeads.filter(l => l.status === 'Convertido' && isToday(l.convertedAt)).length;
   
@@ -381,22 +624,50 @@ function updateUI() {
   const tbody = document.getElementById('leads-tbody');
   tbody.innerHTML = '';
   
-  if(myLeads.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-dim);">Nenhum lead atribuído.</td></tr>`;
+  if(viewLeads.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-dim);">Nenhum lead encontrado para o seu curso associado.</td></tr>`;
     return;
   }
   
   // Sort by Novo first, then priority
-  myLeads.sort((a,b) => {
+  viewLeads.sort((a,b) => {
     if(a.status === 'Novo' && b.status !== 'Novo') return -1;
     if(a.status !== 'Novo' && b.status === 'Novo') return 1;
     const p = { 'Quente': 1, 'Morno': 2, 'Frio': 3 };
     return p[a.classification] - p[b.classification];
   });
   
-  myLeads.forEach(l => {
-    let bClass = l.classification === 'Quente' ? 'b-hot' : l.classification === 'Morno' ? 'b-warm' : 'b-cold';
-    let icon = l.classification === 'Quente' ? '🔥' : l.classification === 'Morno' ? '⚡' : '❄️';
+  viewLeads.forEach(l => {
+    let isOwner = l.handledBy === colabId;
+    let isFree = !l.handledBy;
+    
+    let formatSelect = `
+      <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadFormat('${l.id}', this.value)" ${!isFree && !isOwner ? 'disabled' : ''}>
+        <option value="Online" ${l.format==='Online'?'selected':''}>Online</option>
+        <option value="Presencial" ${l.format==='Presencial'?'selected':''}>Presencial</option>
+      </select>
+    `;
+    
+    let actionUI = '';
+    
+    if (isFree || isOwner) {
+      actionUI = `
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadStatus('${l.id}', this.value)">
+            <option value="Novo" ${l.status==='Novo'?'selected':''}>Novo</option>
+            <option value="Contactado" ${l.status==='Contactado'?'selected':''}>Contactado</option>
+            <option value="Convertido" ${l.status==='Convertido'?'selected':''}>Convertido (Venda)</option>
+          </select>
+          ${l.phone ? `<button class="btn btn-teal" style="padding: 6px 10px; font-size: 11px;" onclick="openWhatsApp('${l.id}', '${l.name}', '${l.phone}', '${l.course || ''}', '${l.classification}')">📱 WhatsApp</button>` : ''}
+        </div>
+      `;
+    } else {
+      let ownerName = 'Colega';
+      let owner = DATA.team.find(t => t.id === l.handledBy);
+      if (owner) ownerName = owner.name;
+      
+      actionUI = `<span class="badge b-gray">Atendido por: ${ownerName}</span>`;
+    }
     
     tbody.innerHTML += `
       <tr>
@@ -406,22 +677,14 @@ function updateUI() {
         </td>
         <td>${l.course || '—'}</td>
         <td>
-          <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadClass('${l.id}', this.value)">
+          <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadClass('${l.id}', this.value)" ${!isFree && !isOwner ? 'disabled' : ''}>
             <option value="Quente" ${l.classification==='Quente'?'selected':''}>🔥 Quente</option>
             <option value="Morno" ${l.classification==='Morno'?'selected':''}>⚡ Morno</option>
             <option value="Frio" ${l.classification==='Frio'?'selected':''}>❄️ Frio</option>
           </select>
         </td>
-        <td>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <select class="form-control" style="padding: 4px; font-size: 11px; width: auto;" onchange="updateLeadStatus('${l.id}', this.value)">
-              <option value="Novo" ${l.status==='Novo'?'selected':''}>Novo</option>
-              <option value="Contactado" ${l.status==='Contactado'?'selected':''}>Contactado</option>
-              <option value="Convertido" ${l.status==='Convertido'?'selected':''}>Convertido (Venda)</option>
-            </select>
-            ${l.phone ? `<button class="btn btn-teal" style="padding: 6px 10px; font-size: 11px;" onclick="openWhatsApp('${l.id}', '${l.name}', '${l.phone}', '${l.course || ''}', '${l.classification}')">📱 WhatsApp</button>` : ''}
-          </div>
-        </td>
+        <td>${formatSelect}</td>
+        <td>${actionUI}</td>
       </tr>
     `;
   });
@@ -430,6 +693,8 @@ function updateUI() {
 function updateLeadStatus(id, newStatus) {
   const lead = DATA.leads.find(x => x.id === id);
   if(lead) {
+    if(!lead.handledBy) lead.handledBy = colabId; // Auto-assign if free
+    
     lead.status = newStatus;
     if(newStatus !== 'Novo') lead.contactedAt = new Date().toISOString();
     if(newStatus === 'Convertido') lead.convertedAt = new Date().toISOString();
@@ -439,9 +704,22 @@ function updateLeadStatus(id, newStatus) {
   }
 }
 
+function updateLeadFormat(id, newFormat) {
+  const lead = DATA.leads.find(x => x.id === id);
+  if(lead) {
+    if(!lead.handledBy) lead.handledBy = colabId; // Auto-assign if free
+    lead.format = newFormat;
+    saveData();
+    showToast(`Formato alterado para ${newFormat}`);
+    updateUI();
+  }
+}
+
 function updateLeadClass(id, newClass) {
   const lead = DATA.leads.find(x => x.id === id);
   if(lead) {
+    if(!lead.handledBy) lead.handledBy = colabId; // Auto-assign if free
+    
     lead.classification = newClass;
     
     // CRM Intelligence update
@@ -467,8 +745,9 @@ function openWhatsApp(id, name, phone, course, classification) {
   if(lead && lead.status === 'Novo') {
     lead.status = 'Contactado';
     lead.contactedAt = new Date().toISOString();
+    lead.handledBy = colabId; // Auto-assign on first contact
     saveData();
-    showToast("Status alterado para Contactado!");
+    showToast("Lead assumido e marcado como Contactado!");
     setTimeout(updateUI, 500);
   }
   
@@ -484,6 +763,146 @@ function openWhatsApp(id, name, phone, course, classification) {
   
   const url = `https://wa.me/${cleanPhone.replace('+','')}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
+}
+
+// ── CHAT INTERNO (EQUIPA) LOGIC ──
+let teamChatListenerActive = false;
+
+function initTeamChatListener() {
+  if (typeof window.db === 'undefined' || !window.db) return;
+  teamChatListenerActive = true;
+  
+  window.db.collection("sistema").doc("master").collection("chat")
+    .orderBy("timestamp", "asc")
+    .limitToLast(100)
+    .onSnapshot((snapshot) => {
+      const box = document.getElementById('team-chat-box');
+      if(!box) return;
+      
+      box.innerHTML = '';
+      if(snapshot.empty) {
+        box.innerHTML = `<div style="text-align:center; color:var(--text-dim); margin-top:2rem;">Nenhuma mensagem na equipa ainda. Inicie a conversa!</div>`;
+        return;
+      }
+      
+      snapshot.forEach((doc) => {
+        const msg = doc.data();
+        const isMine = msg.senderId === colabId;
+        const d = new Date(msg.timestamp);
+        const timeStr = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        
+        box.innerHTML += `
+          <div class="chat-msg ${isMine ? 'mine' : 'other'}">
+            ${!isMine ? `<div class="sender">${msg.senderName}</div>` : ''}
+            <div>${msg.text}</div>
+            <div class="time">${timeStr}</div>
+          </div>
+        `;
+      });
+      
+      box.scrollTop = box.scrollHeight;
+    });
+}
+
+function sendTeamMessage() {
+  const input = document.getElementById('team-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  if (typeof window.db !== 'undefined' && window.db) {
+    window.db.collection("sistema").doc("master").collection("chat").add({
+      text: text,
+      senderId: colabId,
+      senderName: colabData.name,
+      timestamp: Date.now()
+    });
+  }
+  
+  input.value = '';
+}
+
+// ── AI CONSULTOR (CHATBOT) LOGIC ──
+function appendAiMessage(text, isAi = true) {
+  const box = document.getElementById('ai-chat-box');
+  const msgClass = isAi ? 'ai' : 'mine';
+  const senderHtml = isAi ? `<div class="sender">Consultor AI FormFlow</div>` : '';
+  
+  box.innerHTML += `
+    <div class="chat-msg ${msgClass}">
+      ${senderHtml}
+      <div style="white-space: pre-line;">${text}</div>
+    </div>
+  `;
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendAiMessage(presetText) {
+  document.getElementById('ai-chat-input').value = presetText;
+  handleAiChatSubmit();
+}
+
+function handleAiChatSubmit() {
+  const input = document.getElementById('ai-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  // Exibe a mensagem do utilizador
+  appendAiMessage(text, false);
+  input.value = '';
+  
+  // Simula "Typing..."
+  setTimeout(() => {
+    const response = getAiResponse(text.toLowerCase());
+    appendAiMessage(response, true);
+  }, 800);
+}
+
+function getAiResponse(q) {
+  // Base de Conhecimento Rápida (Regras) baseada nas exigências do utilizador
+  
+  if (q.includes('preço') || q.includes('caro') || q.includes('valor')) {
+    return `**Quebra de Objeção: Preço**
+1. O preço não é o problema; a falta de perceção de valor é.
+2. Pergunte: *"Entendo, [Nome]. Quando diz que está caro, está a comparar com o quê exatamente? O seu objetivo é poupar agora ou multiplicar este valor no futuro?"*
+3. **Visualização de Perda:** *"Se não investir nisto hoje, como vai resolver o seu problema nos próximos 6 meses? Quanto lhe vai custar continuar na mesma situação?"*`;
+  }
+  
+  if (q.includes('não responde') || q.includes('ignora') || q.includes('vácuo') || q.includes('visualizou')) {
+    return `**Ação: O Lead não responde**
+1. Não insista com o mesmo discurso. Quebre o padrão.
+2. Envie um áudio curto (máx 15s): *"Olá [Nome], costumo ver as pessoas recuarem quando acham que o curso não é para elas ou quando surge um imprevisto. Aconteceu algo? Pode ser sincero comigo."*
+3. **Se continuar a ignorar (após 2 dias):** *"Estou a fechar a sua ficha de inscrição por falta de resposta. Se o problema se mantiver no futuro, sabe onde me encontrar. Desejo-lhe sucesso!"* (Geralmente respondem por causa do gatilho de rejeição).`;
+  }
+  
+  if (q.includes('urgência') || q.includes('escassez') || q.includes('rápido')) {
+    return `**Estratégia: Urgência e Escassez**
+A verdadeira escassez não é "últimas vagas", é o que a pessoa perde se não agir.
+1. *"Temos apenas 3 vagas bónus que garantem [oferta especial]. Se deixar para amanhã, perde o bónus e paga o preço completo."*
+2. **Visualização:** *"Cada dia que passa sem o método, é um dia que perde face aos seus concorrentes que já começaram."*`;
+  }
+  
+  if (q.includes('storytelling') || q.includes('história') || q.includes('convencer')) {
+    return `**Dica de Storytelling (Visualização de Oportunidades)**
+Histórias vendem mais que características.
+1. Em vez de dizer "O curso tem 50 módulos", diga: *"Tivemos um aluno que começou exatamente como você: com medo e sem tempo. Hoje, depois de aplicar o módulo 3, ele conseguiu..."*
+2. **Perguntas de Implicação:** *"Imagine-se daqui a 1 ano com esta habilidade dominada. O que mudaria na sua rotina?"* Faça o lead vender o curso a ele mesmo!`;
+  }
+  
+  if (q.includes('fecho') || q.includes('taxa') || q.includes('performance')) {
+    // A AI sabe os dados reais porque estamos no frontend
+    const myLeads = DATA.leads.filter(l => l.handledBy === colabId);
+    const totalHandled = myLeads.filter(l => l.status !== 'Novo').length;
+    const totalConverted = myLeads.filter(l => l.status === 'Convertido').length;
+    const convRate = totalHandled > 0 ? Math.round((totalConverted / totalHandled) * 100) : 0;
+    
+    return `Atualmente, a sua Taxa de Conversão é de **${convRate}%** (fechou ${totalConverted} de ${totalHandled} atendimentos).
+Para melhorar isto, nunca faça a oferta de imediato. Use a fórmula: **Dor -> Agitação -> Solução**. Mostre-lhes primeiro que percebe o problema deles melhor do que eles próprios.`;
+  }
+  
+  // Resposta genérica
+  return `Essa é uma excelente questão!
+Para o ajudar da melhor forma, tente usar termos específicos como: **"Como contornar objeção de preço?"**, **"Como criar urgência?"**, **"O que fazer se o lead não responde?"** ou **"Dica de storytelling"**.
+Lembre-se: Quem faz perguntas, domina a negociação. Use perguntas que façam o lead revelar as suas verdadeiras dores.`;
 }
 
 window.onload = init;
